@@ -14,6 +14,7 @@ import androidx.core.content.ContextCompat
 import com.example.headwindcontrol.ui.MainScreen
 import com.example.headwindcontrol.ui.theme.HeadwindControlTheme
 import android.Manifest
+import android.annotation.SuppressLint
 
 
 class MainActivity : ComponentActivity() {
@@ -88,60 +89,3 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
-//
-//@SuppressLint("MissingPermission")
-//@Composable
-//fun MainScreen(name: String, modifier: Modifier = Modifier) {
-
-//    val context: Context = LocalContext.current
-//    val bleManager: BleManager = BleManager(context)
-
-//    val bluetoothDevices = remember { mutableStateListOf<BluetoothDevice>() }
-
-//    Column {
-//        for (device in bluetoothDevices) {
-//            Text(text = device.name ?: "Unknown Device")
-//        }
-
-
-//    Check how this works
-//    val coroutineScope = rememberCoroutineScope()
-
-
-
-//    Column(
-//        verticalArrangement = Arrangement.Center,
-//        horizontalAlignment = Alignment.CenterHorizontally,
-//        modifier = modifier
-//    ) {
-//        Text(
-//            text = "Hello $name!",
-//            fontSize = 50.sp,
-//            lineHeight = 60.sp,
-//            textAlign = TextAlign.Center,
-////            modifier = Modifier.align(alignment = Alignment.CenterHorizontally)
-//        )
-//        Text(
-//            text = "Hello $name!",
-//            fontSize = 50.sp,
-//            lineHeight = 60.sp,
-//            modifier = Modifier
-//                .padding(16.dp)
-////                .align(alignment = Alignment.End)
-//        )
-//    }
-//    }
-
-//    @Preview(showBackground = true)
-//    @Composable
-//    fun MainScreenPreview() {
-//        HeadwindControlTheme {
-//            Surface(
-//                modifier = Modifier.fillMaxSize(),
-//                color = MaterialTheme.colorScheme.background
-//            ) {
-//                MainScreen(name = "Test1", modifier = Modifier.background(color = Color.Gray))
-//            }
-//        }
-//    }
-//}

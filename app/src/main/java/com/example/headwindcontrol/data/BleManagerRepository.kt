@@ -9,9 +9,6 @@ import android.os.IBinder
 import android.util.Log
 import com.example.headwindcontrol.ble.BleManager
 import com.example.headwindcontrol.ble.BleManager.LocalBinder
-import com.example.headwindcontrol.ui.ConnectionStatus
-import com.example.headwindcontrol.ui.FanMode
-import kotlinx.coroutines.flow.update
 
 class BleManagerRepository (private val context: Context){
 

@@ -25,10 +25,6 @@ import java.util.UUID
 
 class BleManager: Service() {
 
-//    private val bluetoothManager: BluetoothManager = context.getSystemService(BluetoothManager::class.java)
-//    private val bluetoothAdapter: BluetoothAdapter? = bluetoothManager.adapter
-//    private val bluetoothLeScanner = bluetoothAdapter?.bluetoothLeScanner
-
     private val TAG = "HW_SCAN"
     private var connectionState = STATE_DISCONNECTED
 

@@ -1,78 +1,66 @@
 package com.example.headwindcontrol.ui
 
 import android.annotation.SuppressLint
-import android.bluetooth.BluetoothDevice
 import android.util.Log
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.text.BasicText
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
-import androidx.compose.material3.Text
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.sp
-import androidx.compose.ui.Alignment
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.zIndex
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.Divider
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.FloatingActionButtonDefaults
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.SmallFloatingActionButton
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.FocusRequester.Companion.createRefs
-import androidx.compose.ui.modifier.modifierLocalConsumer
+import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
-import com.example.headwindcontrol.HeadwindControlApplication
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 
+
+@SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
 fun MainScreen(appViewModel: AppViewModel = viewModel(factory = AppViewModel.Factory)) {
     val appUiState by appViewModel.uiState.collectAsState()
+    val scrollState = rememberScrollState()
 
     Column (
-        modifier = Modifier.padding(start = 20.dp, end = 20.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+        modifier = Modifier.padding(start = 20.dp, end = 20.dp).verticalScroll(scrollState),
+        horizontalAlignment = Alignment.CenterHorizontally,
     )
     {
-
-        Row (
+        Row(
             modifier = Modifier.fillMaxWidth().padding(top = 5.dp, bottom = 10.dp),
         ) {
 
-            ConstraintLayout (
+            ConstraintLayout(
                 modifier = Modifier.fillMaxWidth()
-            ){
-
+            ) {
                 val (deviceConnected, scanButton) = createRefs()
                 DeviceConnected(appUiState.savedDeviceAddress, appUiState.connectedDeviceName,
                     modifier = Modifier.constrainAs(deviceConnected) {
@@ -88,12 +76,16 @@ fun MainScreen(appViewModel: AppViewModel = viewModel(factory = AppViewModel.Fac
                         },
                     onClick = { appViewModel.scanBleDevices() },
 
-                ) {
-                    Icon(Icons.Filled.Search, "Scan for devices", modifier = Modifier.size(20.dp))
+                    ) {
+                    Icon(
+                        Icons.Filled.Search,
+                        "Scan for devices",
+                        modifier = Modifier.size(20.dp)
+                    )
                 }
-
             }
         }
+
 
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -155,7 +147,7 @@ fun MainScreen(appViewModel: AppViewModel = viewModel(factory = AppViewModel.Fac
         }
         Row(
             horizontalArrangement = Arrangement.SpaceBetween,
-            modifier = Modifier.padding(top = 20.dp).fillMaxWidth()
+            modifier = Modifier.padding(top = 20.dp, bottom = 20.dp).fillMaxWidth()
         ) {
 
             SpeedButton(
@@ -186,6 +178,23 @@ fun MainScreen(appViewModel: AppViewModel = viewModel(factory = AppViewModel.Fac
         }
         DevicesList(appUiState.devicesFound) { deviceAddress -> appViewModel.connectToFan(deviceAddress) }
     }
+}
+
+@Composable
+fun DeviceConnected(
+    savedDeviceAddress: String,
+    connectedDeviceName: String,
+    modifier: Modifier = Modifier
+) {
+    Text(
+        text = if (connectedDeviceName != "") connectedDeviceName else savedDeviceAddress,
+        fontSize = 20.sp,
+        lineHeight = 20.sp,
+        modifier = modifier,
+        color = if (connectedDeviceName == "") Color.Gray else MaterialTheme.colorScheme.primary,
+        fontWeight = if (connectedDeviceName == "") FontWeight.Normal else FontWeight.Bold,
+
+        )
 }
 
 
@@ -256,7 +265,14 @@ fun IndeterminateCircularIndicator(connectionStatus: ConnectionStatus, currentSp
         contentAlignment = Alignment.Center
 
     ) {
-            Log.i("HW_SCAN", "Current Fan Speed ${currentSpeed.toFloat()/100}")
+
+        val circleText = when (connectionStatus) {
+            ConnectionStatus.PENDING -> "Connecting..."
+            ConnectionStatus.SCANNING -> "Scanning..."
+            ConnectionStatus.ACTIVE -> currentSpeed.toString()
+            ConnectionStatus.INACTIVE -> "Connect"
+        }
+
         if (connectionStatus == ConnectionStatus.PENDING) {
             CircularProgressIndicator(
                 modifier = Modifier.width(150.dp).height(150.dp),
@@ -274,31 +290,12 @@ fun IndeterminateCircularIndicator(connectionStatus: ConnectionStatus, currentSp
             )
         }
         Text(
-            text = if (connectionStatus == ConnectionStatus.PENDING)
-                "Connecting..." else if (connectionStatus == ConnectionStatus.ACTIVE) currentSpeed.toString() else "Connect",
-            color = if (connectionStatus == ConnectionStatus.ACTIVE) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+            text = circleText,
+            color = if (connectionStatus == ConnectionStatus.ACTIVE) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary,
             fontSize = if (connectionStatus == ConnectionStatus.ACTIVE) 40.sp else 15.sp,
             fontWeight = if (connectionStatus == ConnectionStatus.ACTIVE) FontWeight.Normal else FontWeight.Bold
         )
     }
-}
-
-
-@Composable
-fun DeviceConnected(
-    savedDeviceAddress: String,
-    connectedDeviceName: String,
-    modifier: Modifier = Modifier
-) {
-    Text(
-        text = if (connectedDeviceName != "") connectedDeviceName else savedDeviceAddress,
-        fontSize = 20.sp,
-        lineHeight = 20.sp,
-        modifier = modifier,
-        color = if (connectedDeviceName == "") Color.Gray else MaterialTheme.colorScheme.primary,
-        fontWeight = if (connectedDeviceName == "") FontWeight.Normal else FontWeight.Bold,
-
-    )
 }
 
 
@@ -313,6 +310,18 @@ fun DevicesList(
     Column (
         horizontalAlignment = Alignment.Start
     ){
+
+        if (devicesList.isNotEmpty()) {
+            Text(
+                text = "BLE devices found",
+                fontSize = 19.sp,
+                lineHeight = 19.sp,
+                color = MaterialTheme.colorScheme.secondary,
+                fontWeight = FontWeight.Bold,
+                modifier = modifier.padding(bottom = 5.dp, top = 10.dp)
+            )
+        }
+
         for (device in devicesList) {
             val clickable = "HEADWIND" in device[0]
             Column (
