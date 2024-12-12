@@ -1,3 +1,12 @@
 <resources>
     <string name="app_name">Headwind Control</string>
+    <string name="conn_status_pending">Connecting</string>
+    <string name="conn_status_scanning">Scanning</string>
+    <string name="conn_status_inactive">Connect</string>
+    <string name="ble_devices_found">BLE devices found</string>
+    <string name="permissions_required">Permissions required to run Headwind Control App!</string>
+    <string name="authorize_permissions">Please authorize permissions</string>
+    <string name="approve">Approve</string>
+    <string name="enable_location_service">You must enable location service to perform BLE devices scan!</string>
+    <string name="bluetooth_disabled">Bluetooth disabled</string>
 </resources>

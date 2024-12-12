@@ -37,7 +37,6 @@ class BleManagerRepository (private val context: Context){
     }
 
     private fun createBleService() {
-        Log.i(TAG, "createService started")
         val gattServiceIntent = Intent(context, BleManager::class.java)
         context.bindService(gattServiceIntent, serviceConnection, BIND_AUTO_CREATE)
     }
@@ -66,7 +65,4 @@ class BleManagerRepository (private val context: Context){
     fun setFanSpeed (speed: Byte) {
        bluetoothService?.writeToCharacteristic(byteArrayOf(2, speed, 0, 0))
     }
-
-
-
 }

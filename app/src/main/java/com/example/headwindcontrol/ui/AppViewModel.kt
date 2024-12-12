@@ -2,11 +2,13 @@ package com.example.headwindcontrol.ui
 
 import android.annotation.SuppressLint
 import android.app.Application
+import android.bluetooth.BluetoothAdapter
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Context.RECEIVER_EXPORTED
 import android.content.Intent
 import android.content.IntentFilter
+import android.location.LocationManager
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -42,13 +44,21 @@ class AppViewModel(
     private val gattUpdateReceiver: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             when (intent.action) {
+                BleManager.BLUETOOTH_DISABLED -> {
+                    Log.i(TAG, "Initial BT adapter check completed")
+                    _uiState.update { currentState ->
+                        currentState.copy(
+                            isBtAdapterEnabled = false,
+                        )
+                    }
+                }
                 BleManager.ACTION_GATT_CONNECTED -> {
                     Log.i(TAG, "GATT CONNECTED")
                     _uiState.update { currentState ->
                         currentState.copy(
                             isDeviceConnected = true,
                             connectionStatus = ConnectionStatus.ACTIVE,
-                            connectedDeviceName = intent.getByteArrayExtra("EXTRA_DATA")!!.decodeToString()
+//                            connectedDeviceName = intent.getByteArrayExtra("EXTRA_DATA")!!.decodeToString()
                         )
                     }
                 }
@@ -62,22 +72,22 @@ class AppViewModel(
                         )
                     }
                 }
-                BleManager.ACTION_GATT_SERVICES_DISCOVERED -> {
-                    Log.i(TAG, "GATT SERVICES DISCOVERED")
-
-                }
                 BleManager.ACTION_FAN_STATE_RECEIVED -> {
                     val currentFanSpeed = intent.getByteArrayExtra("EXTRA_DATA")!![2]
-                    val currentFanMode = FanMode.find(intent.getByteArrayExtra("EXTRA_DATA")!![3])
 
-                    Log.i(TAG, "Speed ${currentFanSpeed}, mode $currentFanMode")
+                    Log.i(TAG, "Speed ${currentFanSpeed}, mode ${intent.getByteArrayExtra("EXTRA_DATA")!![3]}")
 
+                    val currentFanMode = if (_uiState.value.requestedFanSpeed == 0.toByte()) {
+                        FanMode.find(intent.getByteArrayExtra("EXTRA_DATA")!![3]) ?: FanMode.MANUAL
+                    } else {
+                        FanMode.MANUAL
+                    }
                     _uiState.update { currentState ->
                         currentState.copy(
                             currentFanSpeed = if (currentFanSpeed == 1.toByte() && currentFanMode !in arrayOf(FanMode.HR,
                                     FanMode.SPEED))
                                 _uiState.value.currentFanSpeed else currentFanSpeed,
-                            currentFanMode = currentFanMode ?: FanMode.OFF
+                            currentFanMode = currentFanMode
                         )
                     }
                 }
@@ -112,7 +122,7 @@ class AppViewModel(
                         )
                     }
                     val requestedFanSpeed = _uiState.value.requestedFanSpeed
-                    if (requestedFanSpeed.toInt() != 0) {
+                    if (requestedFanSpeed != 0.toByte()) {
                         Log.i(TAG, "Send speed change request $requestedFanSpeed")
                         _uiState.update { currentState ->
                             currentState.copy(
@@ -145,6 +155,30 @@ class AppViewModel(
                         }
                     }
                 }
+                BluetoothAdapter.ACTION_STATE_CHANGED -> {
+                    val state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR)
+                    Log.i(TAG, "Bluetooth adapter $state")
+                    when (state) {
+                        BluetoothAdapter.STATE_OFF -> {
+                            _uiState.update { currentState ->
+                                currentState.copy(
+                                    isBtAdapterEnabled = false,
+                                    connectionStatus = ConnectionStatus.INACTIVE
+                                )
+                            }
+                        }
+                        BluetoothAdapter.STATE_ON -> {
+                            _uiState.update { currentState ->
+                                currentState.copy(
+                                    isBtAdapterEnabled = true,
+                                )
+                            }
+                        }
+                    }
+                }
+                LocationManager.PROVIDERS_CHANGED_ACTION -> {
+                    checkLocationEnabled()
+                }
             }
         }
     }
@@ -153,6 +187,7 @@ class AppViewModel(
         // Init broadcast messages receiver from BleManager
         context.registerReceiver(gattUpdateReceiver, makeGattUpdateIntentFilter(), RECEIVER_EXPORTED)
         collectAppSettingsFlow()
+        checkLocationEnabled()
     }
 
     // Collect settings flow from AppSettingsRepository
@@ -180,14 +215,12 @@ class AppViewModel(
     }
 
     fun connectToFan(deviceAddress: String) {
-
         _uiState.update { currentState ->
             currentState.copy(
                 connectionStatus = ConnectionStatus.PENDING,
                 devicesFound = listOf<Array<String>>()
             )
         }
-
         if (deviceAddress != _uiState.value.savedDeviceAddress) {
             viewModelScope.launch {
                 appSettingsRepository.saveDeviceAddress(deviceAddress)
@@ -217,18 +250,29 @@ class AppViewModel(
         }
     }
 
+    private fun checkLocationEnabled() {
+        val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        _uiState.update { currentState ->
+            currentState.copy(
+                isLocationEnabled = locationManager.isLocationEnabled
+            )
+        }
+    }
+
     // BleManager messages filter
     private fun makeGattUpdateIntentFilter(): IntentFilter? {
         return IntentFilter().apply {
+            addAction(BleManager.BLUETOOTH_DISABLED)
             addAction(BleManager.ACTION_GATT_SCAN_FINISHED)
             addAction(BleManager.ACTION_GATT_CONNECTED)
             addAction(BleManager.ACTION_GATT_DISCONNECTED)
-            addAction(BleManager.ACTION_GATT_SERVICES_DISCOVERED)
             addAction(BleManager.ACTION_FAN_STATE_RECEIVED)
             addAction(BleManager.ACTION_DEVICE_NAME_READ)
             addAction(BleManager.ACTION_GATT_CHAR_WRITE_BEGIN)
             addAction(BleManager.ACTION_GATT_CHAR_WRITE_COMPLETE)
             addAction(BleManager.ACTION_GATT_DEVICE_FOUND)
+            addAction(BluetoothAdapter.ACTION_STATE_CHANGED)
+            addAction(LocationManager.PROVIDERS_CHANGED_ACTION)
         }
     }
 

@@ -1,15 +1,14 @@
 package com.example.headwindcontrol.ui
 
 import android.annotation.SuppressLint
+import android.os.Build
 import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -35,12 +34,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.lifecycle.viewmodel.compose.viewModel
-
+import com.example.headwindcontrol.R
 
 
 @SuppressLint("UnusedBoxWithConstraintsScope")
@@ -50,27 +51,73 @@ fun MainScreen(appViewModel: AppViewModel = viewModel(factory = AppViewModel.Fac
     val scrollState = rememberScrollState()
 
     Column (
-        modifier = Modifier.padding(start = 20.dp, end = 20.dp).verticalScroll(scrollState),
+        modifier = Modifier
+            .padding(start = 20.dp, end = 20.dp)
+            .verticalScroll(scrollState),
         horizontalAlignment = Alignment.CenterHorizontally,
     )
     {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(top = 5.dp, bottom = 10.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 5.dp, bottom = 10.dp),
         ) {
-
             ConstraintLayout(
                 modifier = Modifier.fillMaxWidth()
             ) {
-                val (deviceConnected, scanButton) = createRefs()
-                DeviceConnected(appUiState.savedDeviceAddress, appUiState.connectedDeviceName,
-                    modifier = Modifier.constrainAs(deviceConnected) {
-                        centerTo(parent)
-                    })
+                val (logo, deviceConnected, scanButton) = createRefs()
+
+                Column (
+                    modifier = Modifier.constrainAs(logo) {
+                        start.linkTo(parent.start)
+                        centerVerticallyTo(parent)
+                    }
+                ){
+                    Row {
+                        Text(
+                            text = "Headwind",
+                            fontSize = 12.sp,
+                            lineHeight = 13.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                    Row {
+                        Text(
+                            text = "Control",
+                            fontSize = 12.sp,
+                            lineHeight = 13.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+
+                if (appUiState.isBtAdapterEnabled) {
+                    DeviceConnected(appUiState.savedDeviceAddress, appUiState.connectedDeviceName,
+                        modifier = Modifier.constrainAs(deviceConnected) {
+                            centerTo(parent)
+                        })
+                } else {
+                 Text (
+                     text = stringResource(R.string.bluetooth_disabled),
+                     fontSize = 18.sp,
+                     color = Color.Red,
+                     modifier = Modifier.constrainAs(deviceConnected) {
+                         centerTo(parent)
+                     }
+                 )
+
+
+                }
                 Button(
-                    enabled = appUiState.connectionStatus in arrayOf(ConnectionStatus.INACTIVE),
+                    enabled = appUiState.connectionStatus == ConnectionStatus.INACTIVE &&
+                            (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S || appUiState.isLocationEnabled) &&
+                            appUiState.isBtAdapterEnabled,
                     shape = RoundedCornerShape(50),
                     contentPadding = PaddingValues(0.dp),
-                    modifier = Modifier.size(48.dp)
+                    modifier = Modifier
+                        .size(48.dp)
                         .constrainAs(scanButton) {
                             end.linkTo(parent.end)
                         },
@@ -85,22 +132,16 @@ fun MainScreen(appViewModel: AppViewModel = viewModel(factory = AppViewModel.Fac
                 }
             }
         }
-
-
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
             modifier = Modifier.fillMaxWidth()
         ) {
-
             Row (
-
             ){
                 Column (
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ){
-//                SpeedButton(appUiState.waitForCharWrite, appUiState.currentFanSpeed,
-//                    1, "1", appUiState.connectionStatus) { fanSpeed -> appViewModel.setFanSpeed(fanSpeed) }
                     SpeedButton(
                         appUiState.waitForCharWrite, appUiState.currentFanSpeed, appUiState.currentFanMode,
                         5, "5", appUiState.connectionStatus
@@ -113,18 +154,18 @@ fun MainScreen(appViewModel: AppViewModel = viewModel(factory = AppViewModel.Fac
                         appUiState.waitForCharWrite, appUiState.currentFanSpeed, appUiState.currentFanMode,
                         15, "15", appUiState.connectionStatus
                     ) { fanSpeed -> appViewModel.setFanSpeed(fanSpeed) }
-//                    SpeedButton(
-//                        appUiState.waitForCharWrite, appUiState.currentFanSpeed,
-//                        20, "20", appUiState.connectionStatus
-//                    ) { fanSpeed -> appViewModel.setFanSpeed(fanSpeed) }
-
                 }
             }
             IndeterminateCircularIndicator(
                 appUiState.connectionStatus,
-                appUiState.currentFanSpeed
+                appUiState.currentFanSpeed,
+                appUiState.isBtAdapterEnabled,
+                appUiState.savedDeviceAddress
             ) {
-                if (appUiState.connectionStatus == ConnectionStatus.INACTIVE) {
+                if (
+                        appUiState.connectionStatus == ConnectionStatus.INACTIVE
+                        && appUiState.savedDeviceAddress != ""
+                    ) {
                     appViewModel.connectToFan(appUiState.savedDeviceAddress)
                 } else {
                     appViewModel.disconnectFromFan()
@@ -147,7 +188,9 @@ fun MainScreen(appViewModel: AppViewModel = viewModel(factory = AppViewModel.Fac
         }
         Row(
             horizontalArrangement = Arrangement.SpaceBetween,
-            modifier = Modifier.padding(top = 20.dp, bottom = 20.dp).fillMaxWidth()
+            modifier = Modifier
+                .padding(top = 20.dp, bottom = 20.dp)
+                .fillMaxWidth()
         ) {
 
             SpeedButton(
@@ -176,7 +219,8 @@ fun MainScreen(appViewModel: AppViewModel = viewModel(factory = AppViewModel.Fac
             ) { fanSpeed -> appViewModel.setFanSpeed(fanSpeed) }
 
         }
-        DevicesList(appUiState.devicesFound) { deviceAddress -> appViewModel.connectToFan(deviceAddress) }
+        DevicesList(appUiState.devicesFound, appUiState.isLocationEnabled, appUiState.connectionStatus)
+            { deviceAddress -> appViewModel.connectToFan(deviceAddress) }
     }
 }
 
@@ -188,12 +232,11 @@ fun DeviceConnected(
 ) {
     Text(
         text = if (connectedDeviceName != "") connectedDeviceName else savedDeviceAddress,
-        fontSize = 20.sp,
+        fontSize = if (connectedDeviceName != "") 20.sp else 18.sp,
         lineHeight = 20.sp,
         modifier = modifier,
         color = if (connectedDeviceName == "") Color.Gray else MaterialTheme.colorScheme.primary,
         fontWeight = if (connectedDeviceName == "") FontWeight.Normal else FontWeight.Bold,
-
         )
 }
 
@@ -255,7 +298,12 @@ fun SpeedButton(
 }
 
 @Composable
-fun IndeterminateCircularIndicator(connectionStatus: ConnectionStatus, currentSpeed: Byte, callback: () -> Unit) {
+fun IndeterminateCircularIndicator(
+    connectionStatus: ConnectionStatus,
+    currentSpeed: Byte,
+    isBtAdapterEnabled: Boolean,
+    savedDeviceAddress: String,
+    callback: () -> Unit) {
 
     Box(
         modifier = Modifier
@@ -266,32 +314,51 @@ fun IndeterminateCircularIndicator(connectionStatus: ConnectionStatus, currentSp
 
     ) {
 
+        Log.i("HW_SCAN", "Connection status: $connectionStatus")
         val circleText = when (connectionStatus) {
-            ConnectionStatus.PENDING -> "Connecting..."
-            ConnectionStatus.SCANNING -> "Scanning..."
+            ConnectionStatus.PENDING -> stringResource(R.string.conn_status_pending)
+            ConnectionStatus.SCANNING -> stringResource(R.string.conn_status_scanning)
             ConnectionStatus.ACTIVE -> currentSpeed.toString()
-            ConnectionStatus.INACTIVE -> "Connect"
+            ConnectionStatus.INACTIVE -> stringResource(R.string.conn_status_inactive)
         }
 
-        if (connectionStatus == ConnectionStatus.PENDING) {
+        if (connectionStatus in arrayOf(ConnectionStatus.PENDING, ConnectionStatus.SCANNING)) {
             CircularProgressIndicator(
-                modifier = Modifier.width(150.dp).height(150.dp),
+                modifier = Modifier
+                    .width(150.dp)
+                    .height(150.dp),
                 color = MaterialTheme.colorScheme.secondary,
                 trackColor = MaterialTheme.colorScheme.surfaceVariant,
                 strokeWidth = 5.dp,
             )
         } else {
             CircularProgressIndicator(
-                modifier = Modifier.width(150.dp).height(150.dp).clickable { callback() },
+                modifier = Modifier
+                    .width(150.dp)
+                    .height(150.dp)
+                    .clickable(
+                        enabled = isBtAdapterEnabled && savedDeviceAddress != ""
+                    ) { callback() },
                 color = MaterialTheme.colorScheme.secondary,
                 trackColor = MaterialTheme.colorScheme.surfaceVariant,
                 strokeWidth = 5.dp,
                 progress = { currentSpeed.toFloat()/100 }
             )
         }
+
+        val textColor = if (!isBtAdapterEnabled || savedDeviceAddress == "") {
+            Color.Gray
+        } else if (connectionStatus == ConnectionStatus.ACTIVE) {
+            MaterialTheme.colorScheme.primary
+        } else {
+            MaterialTheme.colorScheme.secondary
+        }
+
         Text(
+            modifier = Modifier.padding(horizontal = 10.dp),
             text = circleText,
-            color = if (connectionStatus == ConnectionStatus.ACTIVE) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary,
+            textAlign = TextAlign.Center,
+            color = textColor,
             fontSize = if (connectionStatus == ConnectionStatus.ACTIVE) 40.sp else 15.sp,
             fontWeight = if (connectionStatus == ConnectionStatus.ACTIVE) FontWeight.Normal else FontWeight.Bold
         )
@@ -303,9 +370,23 @@ fun IndeterminateCircularIndicator(connectionStatus: ConnectionStatus, currentSp
 @Composable
 fun DevicesList(
     devicesList: List<Array<String>>,
+    isLocationEnabled: Boolean,
+    connectionStatus: ConnectionStatus,
     modifier: Modifier = Modifier,
     callback: (String) -> Unit
 ) {
+
+    if (
+        Build.VERSION.SDK_INT < Build.VERSION_CODES.S
+        && !isLocationEnabled
+        && connectionStatus == ConnectionStatus.INACTIVE
+        ) {
+        Text(
+            text = stringResource(R.string.enable_location_service),
+            color = Color.Red,
+            textAlign = TextAlign.Center
+        )
+    }
 
     Column (
         horizontalAlignment = Alignment.Start
@@ -313,7 +394,7 @@ fun DevicesList(
 
         if (devicesList.isNotEmpty()) {
             Text(
-                text = "BLE devices found",
+                text = stringResource(R.string.ble_devices_found),
                 fontSize = 19.sp,
                 lineHeight = 19.sp,
                 color = MaterialTheme.colorScheme.secondary,
@@ -325,7 +406,9 @@ fun DevicesList(
         for (device in devicesList) {
             val clickable = "HEADWIND" in device[0]
             Column (
-                modifier = Modifier.padding(vertical = 10.dp).clickable { if (clickable) callback(device[1])}
+                modifier = Modifier
+                    .padding(vertical = 10.dp)
+                    .clickable { if (clickable) callback(device[1]) }
             ){
                 Text(
                     text = device[0],

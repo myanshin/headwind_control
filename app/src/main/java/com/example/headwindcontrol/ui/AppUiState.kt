@@ -18,10 +18,12 @@ enum class ConnectionStatus {
     ACTIVE,
     INACTIVE,
     PENDING,
-    SCANNING
+    SCANNING,
 }
 
 data class AppUiState(
+    val isBtAdapterEnabled: Boolean = true,
+    val isLocationEnabled: Boolean = false,
     val savedDeviceAddress: String = "",
     val connectedDeviceName: String = "",
     val currentFanSpeed: Byte = 0,
