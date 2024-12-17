@@ -309,7 +309,7 @@ fun ModeButton(
             callback(onClickFanMode)
         },
         enabled = !waitForCharWrite && connectionStatus == ConnectionStatus.ACTIVE,
-        modifier = Modifier.width(80.dp),
+        modifier = Modifier.width(60.dp),
         colors = ButtonDefaults.textButtonColors(
             contentColor = if (currentFanMode == onClickFanMode) MaterialTheme.colorScheme.primary
                 else MaterialTheme.colorScheme.secondary
@@ -371,7 +371,7 @@ fun SpeedButton(
                 FontWeight.ExtraBold else FontWeight.SemiBold,
             text = buttonText,
             fontSize = if (currentFanSpeed == onClickFanSpeed && currentFanMode == FanMode.MANUAL)
-                17.sp else 15.sp
+                19.sp else 17.sp
         )
     }
 
