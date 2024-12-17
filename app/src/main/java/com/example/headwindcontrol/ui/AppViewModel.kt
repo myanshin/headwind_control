@@ -17,6 +17,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.headwindcontrol.HeadwindControlApplication
+import com.example.headwindcontrol.MainActivity
 import com.example.headwindcontrol.ble.BleManager
 import com.example.headwindcontrol.data.AppSettingsRepository
 import com.example.headwindcontrol.data.BleManagerRepository
@@ -68,7 +69,8 @@ class AppViewModel(
                         currentState.copy(
                             isDeviceConnected = false,
                             connectionStatus = ConnectionStatus.INACTIVE,
-                            connectedDeviceName = ""
+                            connectedDeviceName = "",
+                            currentFanSpeed = 0
                         )
                     }
                 }
@@ -179,6 +181,30 @@ class AppViewModel(
                 LocationManager.PROVIDERS_CHANGED_ACTION -> {
                     checkLocationEnabled()
                 }
+                MainActivity.ACTION_FAN_CONTROL -> {
+                    val controlType =  intent.getIntExtra("CONTROL_TYPE", 0)
+                    when (controlType) {
+                        MainActivity.FAN_CONTROL_TYPE_MODE_HR -> {
+                            setFanMode(FanMode.HR.code)
+                        }
+                        MainActivity.FAN_CONTROL_TYPE_SPEED_DECREASE -> {
+                            if (uiState.value.currentFanSpeed > 10)
+                                setFanSpeed((uiState.value.currentFanSpeed - 10).toByte())
+                            else if (uiState.value.currentFanSpeed >= 5)
+                                setFanSpeed((uiState.value.currentFanSpeed - 5).toByte())
+
+                        }
+                        MainActivity.FAN_CONTROL_TYPE_SPEED_INCREASE -> {
+                            if (uiState.value.currentFanSpeed <= 90)
+                                setFanSpeed((uiState.value.currentFanSpeed + 10).toByte())
+                            else if (uiState.value.currentFanSpeed <= 5.toByte())
+                                setFanSpeed((uiState.value.currentFanSpeed + 5).toByte())
+                        }
+                    }
+
+
+
+                }
             }
         }
     }
@@ -273,6 +299,7 @@ class AppViewModel(
             addAction(BleManager.ACTION_GATT_DEVICE_FOUND)
             addAction(BluetoothAdapter.ACTION_STATE_CHANGED)
             addAction(LocationManager.PROVIDERS_CHANGED_ACTION)
+            addAction(MainActivity.ACTION_FAN_CONTROL)
         }
     }
 

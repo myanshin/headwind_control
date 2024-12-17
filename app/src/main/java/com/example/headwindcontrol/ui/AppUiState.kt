@@ -4,8 +4,8 @@ enum class FanMode(val code: Byte) {
     OFF(1),
     HR(2),
     SPEED(3),
-    MANUAL(4),
-    SLEEP(5);
+    MANUAL(4);
+//    SLEEP(5);
 
     companion object {
         fun find(code: Byte): FanMode? {
