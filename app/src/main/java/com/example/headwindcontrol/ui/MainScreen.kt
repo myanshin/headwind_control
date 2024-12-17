@@ -210,10 +210,10 @@ fun MainScreen(
                     .fillMaxWidth()
             ) {
 
-                SpeedButton(
-                    waitForCharWrite, appUiState.currentFanSpeed, appUiState.currentFanMode,
-                    20, "20", appUiState.connectionStatus
-                ) { fanSpeed -> appViewModel.setFanSpeed(fanSpeed) }
+//                SpeedButton(
+//                    waitForCharWrite, appUiState.currentFanSpeed, appUiState.currentFanMode,
+//                    20, "20", appUiState.connectionStatus
+//                ) { fanSpeed -> appViewModel.setFanSpeed(fanSpeed) }
                 SpeedButton(
                     waitForCharWrite, appUiState.currentFanSpeed, appUiState.currentFanMode,
                     25, "25", appUiState.connectionStatus
@@ -326,6 +326,7 @@ fun ModeButton(
         )
     }
 }
+
 
 
 @Composable
