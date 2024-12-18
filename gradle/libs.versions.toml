@@ -1,15 +1,15 @@
 [versions]
-agp = "8.7.2"
+agp = "8.7.3"
 constraintlayoutCompose = "1.1.0"
 datastorePreferences = "1.1.1"
 kotlin = "2.0.0"
-coreKtx = "1.10.1"
+coreKtx = "1.15.0"
 junit = "4.13.2"
-junitVersion = "1.1.5"
-espressoCore = "3.5.1"
+junitVersion = "1.2.1"
+espressoCore = "3.6.1"
 lifecycleRuntimeKtx = "2.8.7"
-activityCompose = "1.8.0"
-composeBom = "2024.04.01"
+activityCompose = "1.9.3"
+composeBom = "2024.12.01"
 lifecycleViewmodelCompose = "2.8.7"
 
 

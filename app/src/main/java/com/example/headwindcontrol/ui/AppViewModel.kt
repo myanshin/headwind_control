@@ -234,7 +234,7 @@ class AppViewModel(
         _uiState.update { currentState ->
             currentState.copy(
                 connectionStatus = ConnectionStatus.SCANNING,
-                devicesFound = listOf<Array<String>>()
+                devicesFound = listOf()
             )
         }
         return bleManagerRepository.scanBleDevices()
@@ -244,7 +244,7 @@ class AppViewModel(
         _uiState.update { currentState ->
             currentState.copy(
                 connectionStatus = ConnectionStatus.PENDING,
-                devicesFound = listOf<Array<String>>()
+                devicesFound = listOf()
             )
         }
         if (deviceAddress != _uiState.value.savedDeviceAddress) {
@@ -269,7 +269,7 @@ class AppViewModel(
         } else {
             _uiState.update { currentState ->
                 currentState.copy(
-                    requestedFanSpeed = speed.toByte()
+                    requestedFanSpeed = speed
                 )
             }
             return bleManagerRepository.setFanMode(FanMode.MANUAL.code)
@@ -286,7 +286,7 @@ class AppViewModel(
     }
 
     // BleManager messages filter
-    private fun makeGattUpdateIntentFilter(): IntentFilter? {
+    private fun makeGattUpdateIntentFilter(): IntentFilter {
         return IntentFilter().apply {
             addAction(BleManager.BLUETOOTH_DISABLED)
             addAction(BleManager.ACTION_GATT_SCAN_FINISHED)

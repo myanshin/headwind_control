@@ -42,7 +42,7 @@ class BleManager: Service() {
     // Set up a bound service
     private val binder = LocalBinder()
 
-    override fun onBind(intent: Intent): IBinder? {
+    override fun onBind(intent: Intent): IBinder {
         return binder
     }
 
@@ -151,7 +151,7 @@ class BleManager: Service() {
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 when (characteristic.uuid) {
                     UUID_DEVICE_NAME -> {
-                        Log.i("HW_SCAN", "Device name: ${characteristic.value.toString()}")
+                        Log.i("HW_SCAN", "Device name: ${characteristic.value}")
                         broadcastUpdate(ACTION_DEVICE_NAME_READ, characteristic.value)
                         setCharacteristicNotification(UUID_FAN_SPEED_SERVICE, UUID_FAN_SPEED, true)
                     }
@@ -279,11 +279,11 @@ class BleManager: Service() {
         const val ACTION_GATT_DEVICE_FOUND =
             "BleManager.ACTION_GATT_DEVICE_FOUND"
 
-        val UUID_GENERIC_ACCESS_SERVICE = UUID.fromString("00001800-0000-1000-8000-00805f9b34fb")
-        val UUID_DEVICE_NAME = UUID.fromString("00002a00-0000-1000-8000-00805f9b34fb")
-        val UUID_FAN_SPEED_SERVICE = UUID.fromString("a026ee0c-0a7d-4ab3-97fa-f1500f9feb8b")
-        val UUID_FAN_SPEED = UUID.fromString("a026e038-0a7d-4ab3-97fa-f1500f9feb8b")
-        val CLIENT_CHARACTERISTIC_CONFIG = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")
+        val UUID_GENERIC_ACCESS_SERVICE: UUID = UUID.fromString("00001800-0000-1000-8000-00805f9b34fb")
+        val UUID_DEVICE_NAME: UUID = UUID.fromString("00002a00-0000-1000-8000-00805f9b34fb")
+        val UUID_FAN_SPEED_SERVICE: UUID = UUID.fromString("a026ee0c-0a7d-4ab3-97fa-f1500f9feb8b")
+        val UUID_FAN_SPEED: UUID = UUID.fromString("a026e038-0a7d-4ab3-97fa-f1500f9feb8b")
+        val CLIENT_CHARACTERISTIC_CONFIG: UUID = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")
 
         private const val STATE_DISCONNECTED = 0
         private const val STATE_CONNECTED = 2

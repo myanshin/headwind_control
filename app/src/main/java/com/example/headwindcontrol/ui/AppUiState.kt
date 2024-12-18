@@ -32,5 +32,5 @@ data class AppUiState(
     val isDeviceConnected: Boolean = false,
     val connectionStatus: ConnectionStatus = ConnectionStatus.INACTIVE,
     val waitForCharWrite: Boolean = false,
-    val devicesFound: List<Array<String>> = listOf<Array<String>>()
+    val devicesFound: List<Array<String>> = listOf()
 )

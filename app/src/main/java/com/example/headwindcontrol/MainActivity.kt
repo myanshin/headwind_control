@@ -1,10 +1,11 @@
 package com.example.headwindcontrol
 
 import android.app.PendingIntent
-import android.content.res.Configuration
 import android.app.PictureInPictureParams
 import android.app.RemoteAction
 import android.content.Intent
+import android.content.res.Configuration
+import android.graphics.drawable.Icon
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -14,12 +15,10 @@ import androidx.activity.compose.setContent
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.fillMaxSize
-import android.graphics.drawable.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import com.example.headwindcontrol.ui.CheckBluetoothPermissions
-import com.example.headwindcontrol.ui.FanMode
 import com.example.headwindcontrol.ui.MainScreen
 import com.example.headwindcontrol.ui.theme.HeadwindControlTheme
 
@@ -30,7 +29,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var pipParams: PictureInPictureParams
 
     companion object {
-        private val TAG = "HW_SCAN"
+        private const val TAG = "HW_SCAN"
         const val ACTION_FAN_CONTROL =
             "MainActivity.ACTION_FAN_CONTROL"
         const val FAN_CONTROL_TYPE_SPEED_DECREASE = 0
@@ -55,7 +54,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    CheckBluetoothPermissions(this, { MainScreen(isPipModeEnabled = isPipModeEnabled) })
+                    CheckBluetoothPermissions(this) { MainScreen(isPipModeEnabled = isPipModeEnabled) }
                 }
             }
         }
