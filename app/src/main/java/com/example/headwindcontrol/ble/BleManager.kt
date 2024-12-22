@@ -24,7 +24,7 @@ import java.util.UUID
 
 class BleManager: Service() {
 
-    private val TAG = "HW_SCAN"
+    private val tag = "HW_SCAN"
     private var connectionState = STATE_DISCONNECTED
 
     private var bluetoothAdapter: BluetoothAdapter? = null
@@ -71,7 +71,7 @@ class BleManager: Service() {
             broadcastUpdate(BLUETOOTH_DISABLED)
         }
         if (bluetoothAdapter == null) {
-            Log.e(TAG, "Unable to obtain a BluetoothAdapter.")
+            Log.e(tag, "Unable to obtain a BluetoothAdapter.")
             return false
         }
         return true
@@ -91,7 +91,6 @@ class BleManager: Service() {
 
     @SuppressLint("MissingPermission")
     fun startScan() {
-        Log.i(TAG, "BLE scan started")
         bluetoothLeScanner = bluetoothAdapter?.bluetoothLeScanner
         if (!scanning) { // Stops scanning after a pre-defined scan period.
             Handler(
@@ -123,14 +122,12 @@ class BleManager: Service() {
         override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
             super.onConnectionStateChange(gatt, status, newState)
             if (newState == BluetoothProfile.STATE_CONNECTED) {
-                Log.i(TAG, "Connected to device ${bluetoothGatt?.device!!.address}")
                 connectionState = STATE_CONNECTED
                 broadcastUpdate(ACTION_GATT_CONNECTED,
                     bluetoothGatt?.device!!.address.encodeToByteArray()
                 )
                 bluetoothGatt?.discoverServices()
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
-                Log.i(TAG, "Disconnected from device")
                 connectionState = STATE_DISCONNECTED
                 broadcastUpdate(ACTION_GATT_DISCONNECTED)
                 gatt.close()
@@ -143,7 +140,7 @@ class BleManager: Service() {
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 readCharacteristic(UUID_GENERIC_ACCESS_SERVICE, UUID_DEVICE_NAME)
             } else {
-                println("Service discovery failed with status: $status")
+                Log.e(tag,"Service discovery failed with status: $status")
             }
         }
 
@@ -151,22 +148,20 @@ class BleManager: Service() {
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 when (characteristic.uuid) {
                     UUID_DEVICE_NAME -> {
-                        Log.i("HW_SCAN", "Device name: ${characteristic.value}")
                         broadcastUpdate(ACTION_DEVICE_NAME_READ, characteristic.value)
                         setCharacteristicNotification(UUID_FAN_SPEED_SERVICE, UUID_FAN_SPEED, true)
                     }
                 }
             } else {
-                Log.i("HW_SCAN", "Characteristic read failed with status: $status")
+                Log.e(tag, "Characteristic read failed with status: $status")
             }
         }
 
         override fun onCharacteristicWrite(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic, status: Int) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 broadcastUpdate(ACTION_GATT_CHAR_WRITE_COMPLETE)
-                Log.i("HW_SCAN", "Characteristic ${characteristic.uuid} written successfully!")
             } else {
-                Log.w("HW_SCAN", "Failed to write characteristic: $status")
+                Log.e(tag, "Failed to write characteristic: $status")
             }
         }
 
@@ -190,11 +185,11 @@ class BleManager: Service() {
                 bluetoothGatt = device.connectGatt(this, false, gattCallback)
                 return true
             } catch (exception: IllegalArgumentException) {
-                Log.i(TAG, "Device not found with provided address.")
+                Log.e(tag, "Device not found with provided address.")
                 return false
             }
         } ?: run {
-            Log.i(TAG, "BluetoothAdapter not initialized")
+            Log.e(tag, "BluetoothAdapter not initialized")
             return false
         }
     }
@@ -203,8 +198,7 @@ class BleManager: Service() {
     fun disconnect() {
         bluetoothGatt?.let { gatt ->
             gatt.disconnect()
-            Log.i(TAG, "Successfully disconnected from GATT server.")
-        } ?: Log.i(TAG, "BluetoothGatt is null. Cannot disconnect.")
+        } ?: Log.e(tag, "BluetoothGatt is null. Cannot disconnect.")
     }
 
     @SuppressLint("MissingPermission")
@@ -227,7 +221,7 @@ class BleManager: Service() {
             characteristic.value = valueToWrite
             bluetoothGatt?.writeCharacteristic(characteristic)
         } else {
-            Log.e("BLE", "Characteristic not found!")
+            Log.e(tag, "Characteristic not found!")
         }
     }
 
@@ -241,21 +235,18 @@ class BleManager: Service() {
             val service = gatt.getService(serviceUuid)
             val characteristic = service?.getCharacteristic(characteristicUuid)
             if (characteristic != null) {
-                Log.i(TAG, "Attempting to write char ${characteristic.uuid} to device ${gatt.device.address}")
                 gatt.writeCharacteristic(characteristic)
                 gatt.setCharacteristicNotification(characteristic, enabled)
-
                 if (UUID_FAN_SPEED == characteristicUuid) {
-                    Log.i(TAG, "Attempting to write char ${characteristic.uuid} to device ${gatt.device.address}")
                     val descriptor = characteristic.getDescriptor(CLIENT_CHARACTERISTIC_CONFIG)
                     descriptor?.value = BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
                     gatt.writeDescriptor(descriptor)
                 }
             } else {
-                Log.e(TAG, "Characteristic not found!")
+                Log.e(tag, "Characteristic not found!")
             }
         } ?: run {
-            Log.w(TAG, "BluetoothGatt not initialized")
+            Log.e(tag, "BluetoothGatt not initialized")
         }
     }
 
@@ -279,11 +270,11 @@ class BleManager: Service() {
         const val ACTION_GATT_DEVICE_FOUND =
             "BleManager.ACTION_GATT_DEVICE_FOUND"
 
-        val UUID_GENERIC_ACCESS_SERVICE: UUID = UUID.fromString("00001800-0000-1000-8000-00805f9b34fb")
-        val UUID_DEVICE_NAME: UUID = UUID.fromString("00002a00-0000-1000-8000-00805f9b34fb")
-        val UUID_FAN_SPEED_SERVICE: UUID = UUID.fromString("a026ee0c-0a7d-4ab3-97fa-f1500f9feb8b")
-        val UUID_FAN_SPEED: UUID = UUID.fromString("a026e038-0a7d-4ab3-97fa-f1500f9feb8b")
-        val CLIENT_CHARACTERISTIC_CONFIG: UUID = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")
+        private val UUID_GENERIC_ACCESS_SERVICE: UUID = UUID.fromString("00001800-0000-1000-8000-00805f9b34fb")
+        private val UUID_DEVICE_NAME: UUID = UUID.fromString("00002a00-0000-1000-8000-00805f9b34fb")
+        private val UUID_FAN_SPEED_SERVICE: UUID = UUID.fromString("a026ee0c-0a7d-4ab3-97fa-f1500f9feb8b")
+        private val UUID_FAN_SPEED: UUID = UUID.fromString("a026e038-0a7d-4ab3-97fa-f1500f9feb8b")
+        private val CLIENT_CHARACTERISTIC_CONFIG: UUID = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")
 
         private const val STATE_DISCONNECTED = 0
         private const val STATE_CONNECTED = 2

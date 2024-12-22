@@ -5,6 +5,7 @@ import android.app.PictureInPictureParams
 import android.app.RemoteAction
 import android.content.Intent
 import android.content.res.Configuration
+import android.graphics.Rect
 import android.graphics.drawable.Icon
 import android.os.Build
 import android.os.Bundle
@@ -12,12 +13,21 @@ import android.util.Log
 import android.util.Rational
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.annotation.DrawableRes
+import androidx.annotation.RequiresApi
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.toAndroidRectF
+import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.core.graphics.toRect
 import com.example.headwindcontrol.ui.CheckBluetoothPermissions
 import com.example.headwindcontrol.ui.MainScreen
 import com.example.headwindcontrol.ui.theme.HeadwindControlTheme
@@ -25,11 +35,10 @@ import com.example.headwindcontrol.ui.theme.HeadwindControlTheme
 
 class MainActivity : ComponentActivity() {
 
-    private var isPipModeEnabled = false
+    var isPipModeEnabled = false
     private lateinit var pipParams: PictureInPictureParams
 
     companion object {
-        private const val TAG = "HW_SCAN"
         const val ACTION_FAN_CONTROL =
             "MainActivity.ACTION_FAN_CONTROL"
         const val FAN_CONTROL_TYPE_SPEED_DECREASE = 0
@@ -37,33 +46,38 @@ class MainActivity : ComponentActivity() {
         const val FAN_CONTROL_TYPE_MODE_HR = 2
     }
 
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            updatePictureInPictureParams()
-        }
-
-        Log.i(TAG, "APP Started")
-
-//        enableEdgeToEdge()
+    private fun setContent() {
         setContent {
             HeadwindControlTheme {
                 Surface(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .safeDrawingPadding()
+                        .onGloballyPositioned { layoutCoordinates ->
+                            val sourceRect = layoutCoordinates.boundsInWindow().toAndroidRectF().toRect()
+                            val aspectRect = Rect(0,0,sourceRect.width(),sourceRect.width() * 9 / 16)
+                            pipParams = updatePictureInPictureParams(aspectRect)
+                        },
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    CheckBluetoothPermissions(this) { MainScreen(isPipModeEnabled = isPipModeEnabled) }
+                    if (!isPipModeEnabled)
+                        CheckBluetoothPermissions(this) { MainScreen(isPipModeEnabled = false) }
+                    else
+                        MainScreen(isPipModeEnabled = true)
                 }
             }
         }
     }
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+        setContent()
+    }
 
     override fun onUserLeaveHint() {
+        super.onUserLeaveHint()
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
-            pipParams = updatePictureInPictureParams()
             enterPictureInPictureMode(pipParams)
         }
     }
@@ -72,16 +86,16 @@ class MainActivity : ComponentActivity() {
         isInPictureInPictureMode: Boolean,
         newConfig: Configuration
     ) {
-        super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig)
         isPipModeEnabled = isInPictureInPictureMode
+        super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig)
+        setContent()
     }
 
-    private fun updatePictureInPictureParams(): PictureInPictureParams {
-
-        Log.i(TAG, "Maximum actions: ${this.maxNumPictureInPictureActions}")
+    private fun updatePictureInPictureParams(sourceRect: Rect = Rect()): PictureInPictureParams {
 
         val aspectRatio = Rational(16, 9)
         val pipParams = PictureInPictureParams.Builder()
+            .setSourceRectHint(sourceRect)
             .setAspectRatio(aspectRatio)
             .setActions(
                 listOf(
@@ -105,7 +119,8 @@ class MainActivity : ComponentActivity() {
 
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            pipParams.setAutoEnterEnabled(true)
+            pipParams
+                .setAutoEnterEnabled(true)
         }
         return pipParams.build().also {
             setPictureInPictureParams(it)
@@ -118,7 +133,6 @@ class MainActivity : ComponentActivity() {
         controlType: Int,
     ): RemoteAction {
 
-        Log.i(TAG, "Request code: $controlType")
         return RemoteAction(
             Icon.createWithResource(this, iconResId),
             getString(titleResId),

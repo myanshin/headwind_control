@@ -8,7 +8,6 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
-import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
@@ -66,7 +65,6 @@ val requiredPermissions =
 fun CheckBluetoothPermissions(activity: Activity, composable: @Composable () -> Unit ) {
         var locationPermissionsGranted by remember { mutableStateOf(areLocationPermissionsAlreadyGranted(activity))
     }
-    Log.i("HW_SCAN", "Permissions needed: ${requiredPermissions.joinToString()}")
 
     var shouldShowPermissionRationale by remember {
         mutableStateOf(
@@ -115,11 +113,11 @@ fun CheckBluetoothPermissions(activity: Activity, composable: @Composable () -> 
     )
 
     val scope = rememberCoroutineScope()
-    val snackbarHostState = remember { SnackbarHostState() }
+    val snackBarHostState = remember { SnackbarHostState() }
 
 
     Scaffold(snackbarHost = {
-        SnackbarHost(hostState = snackbarHostState)
+        SnackbarHost(hostState = snackBarHostState)
     }) {
             contentPadding ->
 
@@ -145,7 +143,7 @@ fun CheckBluetoothPermissions(activity: Activity, composable: @Composable () -> 
         if (shouldShowPermissionRationale) {
             LaunchedEffect(Unit) {
                 scope.launch {
-                    val userAction = snackbarHostState.showSnackbar(
+                    val userAction = snackBarHostState.showSnackbar(
                         message = activity.getString(R.string.authorize_permissions),
                         actionLabel = activity.getString(R.string.approve),
                         duration = SnackbarDuration.Indefinite,

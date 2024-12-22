@@ -2,7 +2,6 @@ package com.example.headwindcontrol.ui
 
 import android.annotation.SuppressLint
 import android.os.Build
-import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -44,6 +43,7 @@ import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.headwindcontrol.R
+import android.util.Log
 
 
 @SuppressLint("UnusedBoxWithConstraintsScope")
@@ -56,8 +56,7 @@ fun MainScreen(
     val scrollState = rememberScrollState()
     val waitForCharWrite = false
 
-    Log.i("HW_SCAN", "PIP mode enabled: $isPipModeEnabled")
-
+//    Log.i("HW_SCAN", "Pip mode enabled: $isPipModeEnabled")
 
     if (!isPipModeEnabled) {
         Column(
@@ -249,12 +248,12 @@ fun MainScreen(
 
             ModeButton(
                 waitForCharWrite, appUiState.currentFanMode.code,
-                FanMode.MANUAL.code, "MAN", appUiState.connectionStatus
+                FanMode.MANUAL.code, "MAN", appUiState.connectionStatus, Modifier.width(80.dp)
             ) { }
             SmallIndicator(appUiState.currentFanSpeed)
             ModeButton(
                 waitForCharWrite, appUiState.currentFanMode.code,
-                FanMode.HR.code, "HR", appUiState.connectionStatus
+                FanMode.HR.code, "HR", appUiState.connectionStatus, Modifier.width(80.dp)
             ) { }
         }
     }
@@ -284,6 +283,7 @@ fun ModeButton(
     onClickFanMode: Byte,
     buttonText: String,
     connectionStatus: ConnectionStatus,
+    modifier: Modifier = Modifier,
     callback: (Byte) -> Unit
 ) {
 //    Button(
@@ -306,7 +306,7 @@ fun ModeButton(
             callback(onClickFanMode)
         },
         enabled = !waitForCharWrite && connectionStatus == ConnectionStatus.ACTIVE,
-        modifier = Modifier.width(60.dp),
+        modifier = modifier.width(60.dp),
         colors = ButtonDefaults.textButtonColors(
             contentColor = if (currentFanMode == onClickFanMode) MaterialTheme.colorScheme.primary
                 else MaterialTheme.colorScheme.secondary
@@ -334,6 +334,7 @@ fun SpeedButton(
     onClickFanSpeed: Byte,
     buttonText: String,
     connectionStatus: ConnectionStatus,
+    modifier: Modifier = Modifier,
     callback: (Byte) -> Unit
 ) {
 //    Button(
@@ -355,7 +356,7 @@ fun SpeedButton(
             callback(onClickFanSpeed)
         },
         enabled = !waitForCharWrite && connectionStatus == ConnectionStatus.ACTIVE,
-        modifier = Modifier.width(60.dp),
+        modifier = modifier.width(60.dp),
         colors = ButtonDefaults.textButtonColors(
             contentColor = if (currentFanSpeed == onClickFanSpeed && currentFanMode == FanMode.MANUAL) MaterialTheme.colorScheme.primary
             else MaterialTheme.colorScheme.secondary
@@ -391,7 +392,6 @@ fun IndeterminateCircularIndicator(
 
     ) {
 
-        Log.i("HW_SCAN", "Connection status: $connectionStatus")
         val circleText = when (connectionStatus) {
             ConnectionStatus.PENDING -> stringResource(R.string.conn_status_pending)
             ConnectionStatus.SCANNING -> stringResource(R.string.conn_status_scanning)

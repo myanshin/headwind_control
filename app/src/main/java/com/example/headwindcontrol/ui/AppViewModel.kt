@@ -9,7 +9,6 @@ import android.content.Context.RECEIVER_EXPORTED
 import android.content.Intent
 import android.content.IntentFilter
 import android.location.LocationManager
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
@@ -35,7 +34,6 @@ class AppViewModel(
     private val bleManagerRepository: BleManagerRepository
 ) : ViewModel() {
 
-    private val TAG = "HW_SCAN"
     private val context: Context = application.applicationContext
     private val _uiState = MutableStateFlow(AppUiState())
 
@@ -46,7 +44,6 @@ class AppViewModel(
         override fun onReceive(context: Context, intent: Intent) {
             when (intent.action) {
                 BleManager.BLUETOOTH_DISABLED -> {
-                    Log.i(TAG, "Initial BT adapter check completed")
                     _uiState.update { currentState ->
                         currentState.copy(
                             isBtAdapterEnabled = false,
@@ -54,7 +51,6 @@ class AppViewModel(
                     }
                 }
                 BleManager.ACTION_GATT_CONNECTED -> {
-                    Log.i(TAG, "GATT CONNECTED")
                     _uiState.update { currentState ->
                         currentState.copy(
                             isDeviceConnected = true,
@@ -64,7 +60,6 @@ class AppViewModel(
                     }
                 }
                 BleManager.ACTION_GATT_DISCONNECTED -> {
-                    Log.i(TAG, "GATT DISCONNECTED")
                     _uiState.update { currentState ->
                         currentState.copy(
                             isDeviceConnected = false,
@@ -76,9 +71,6 @@ class AppViewModel(
                 }
                 BleManager.ACTION_FAN_STATE_RECEIVED -> {
                     val currentFanSpeed = intent.getByteArrayExtra("EXTRA_DATA")!![2]
-
-                    Log.i(TAG, "Speed ${currentFanSpeed}, mode ${intent.getByteArrayExtra("EXTRA_DATA")!![3]}")
-
                     val currentFanMode = if (_uiState.value.requestedFanSpeed == 0.toByte()) {
                         FanMode.find(intent.getByteArrayExtra("EXTRA_DATA")!![3]) ?: FanMode.MANUAL
                     } else {
@@ -125,7 +117,6 @@ class AppViewModel(
                     }
                     val requestedFanSpeed = _uiState.value.requestedFanSpeed
                     if (requestedFanSpeed != 0.toByte()) {
-                        Log.i(TAG, "Send speed change request $requestedFanSpeed")
                         _uiState.update { currentState ->
                             currentState.copy(
                                 requestedFanSpeed = 0,
@@ -159,7 +150,6 @@ class AppViewModel(
                 }
                 BluetoothAdapter.ACTION_STATE_CHANGED -> {
                     val state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR)
-                    Log.i(TAG, "Bluetooth adapter $state")
                     when (state) {
                         BluetoothAdapter.STATE_OFF -> {
                             _uiState.update { currentState ->
