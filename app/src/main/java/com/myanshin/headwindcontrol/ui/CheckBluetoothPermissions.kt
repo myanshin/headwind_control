@@ -1,4 +1,4 @@
-package com.example.headwindcontrol.ui
+package com.myanshin.headwindcontrol.ui
 
 import android.Manifest
 import android.annotation.SuppressLint
@@ -42,7 +42,7 @@ import androidx.core.content.ContextCompat.startActivity
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import com.example.headwindcontrol.R
+import com.myanshin.headwindcontrol.R
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 

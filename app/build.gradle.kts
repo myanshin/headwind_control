@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.headwindcontrol"
+    namespace = "com.myanshin.headwindcontrol"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.example.headwindcontrol"
+        applicationId = "com.myanshin.headwindcontrol"
         minSdk = 29
         targetSdk = 34
         versionCode = 1

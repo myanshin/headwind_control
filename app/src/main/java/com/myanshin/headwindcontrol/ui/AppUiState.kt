@@ -1,4 +1,4 @@
-package com.example.headwindcontrol.ui
+package com.myanshin.headwindcontrol.ui
 
 enum class FanMode(val code: Byte) {
     OFF(1),

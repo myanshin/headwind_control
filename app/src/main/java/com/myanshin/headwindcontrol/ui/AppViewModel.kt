@@ -1,4 +1,4 @@
-package com.example.headwindcontrol.ui
+package com.myanshin.headwindcontrol.ui
 
 import android.annotation.SuppressLint
 import android.app.Application
@@ -15,11 +15,11 @@ import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.AP
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import com.example.headwindcontrol.HeadwindControlApplication
-import com.example.headwindcontrol.MainActivity
-import com.example.headwindcontrol.ble.BleManager
-import com.example.headwindcontrol.data.AppSettingsRepository
-import com.example.headwindcontrol.data.BleManagerRepository
+import com.myanshin.headwindcontrol.HeadwindControlApplication
+import com.myanshin.headwindcontrol.MainActivity
+import com.myanshin.headwindcontrol.ble.BleManager
+import com.myanshin.headwindcontrol.data.AppSettingsRepository
+import com.myanshin.headwindcontrol.data.BleManagerRepository
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

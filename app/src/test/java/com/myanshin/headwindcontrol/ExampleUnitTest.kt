@@ -1,4 +1,4 @@
-package com.example.headwindcontrol
+package com.myanshin.headwindcontrol
 
 import org.junit.Test
 

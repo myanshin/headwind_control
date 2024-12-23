@@ -1,4 +1,4 @@
-package com.example.headwindcontrol.ble
+package com.myanshin.headwindcontrol.ble
 
 import android.annotation.SuppressLint
 import android.app.Service
@@ -196,9 +196,7 @@ class BleManager: Service() {
 
     @SuppressLint("MissingPermission")
     fun disconnect() {
-        bluetoothGatt?.let { gatt ->
-            gatt.disconnect()
-        } ?: Log.e(tag, "BluetoothGatt is null. Cannot disconnect.")
+        bluetoothGatt?.disconnect() ?: Log.e(tag, "BluetoothGatt is null. Cannot disconnect.")
     }
 
     @SuppressLint("MissingPermission")

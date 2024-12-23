@@ -1,4 +1,4 @@
-package com.example.headwindcontrol.ui
+package com.myanshin.headwindcontrol.ui
 
 import android.annotation.SuppressLint
 import android.os.Build
@@ -42,8 +42,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.headwindcontrol.R
-import android.util.Log
+import com.myanshin.headwindcontrol.R
 
 
 @SuppressLint("UnusedBoxWithConstraintsScope")

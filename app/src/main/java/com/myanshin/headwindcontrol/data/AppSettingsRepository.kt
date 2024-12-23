@@ -1,4 +1,4 @@
-package com.example.headwindcontrol.data
+package com.myanshin.headwindcontrol.data
 import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.datastore.core.IOException

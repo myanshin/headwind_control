@@ -1,4 +1,4 @@
-package com.example.headwindcontrol
+package com.myanshin.headwindcontrol
 
 import android.app.PendingIntent
 import android.app.PictureInPictureParams
@@ -9,28 +9,24 @@ import android.graphics.Rect
 import android.graphics.drawable.Icon
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import android.util.Rational
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.annotation.DrawableRes
-import androidx.annotation.RequiresApi
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.toAndroidRectF
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.core.graphics.toRect
-import com.example.headwindcontrol.ui.CheckBluetoothPermissions
-import com.example.headwindcontrol.ui.MainScreen
-import com.example.headwindcontrol.ui.theme.HeadwindControlTheme
+import com.myanshin.headwindcontrol.ui.CheckBluetoothPermissions
+import com.myanshin.headwindcontrol.ui.MainScreen
+import com.myanshin.headwindcontrol.ui.theme.HeadwindControlTheme
 
 
 class MainActivity : ComponentActivity() {
