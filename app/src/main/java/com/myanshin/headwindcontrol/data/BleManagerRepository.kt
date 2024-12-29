@@ -7,8 +7,10 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.os.IBinder
 import android.util.Log
+import com.myanshin.headwindcontrol.CommandType
 import com.myanshin.headwindcontrol.ble.BleManager
 import com.myanshin.headwindcontrol.ble.BleManager.LocalBinder
+
 
 class BleManagerRepository (private val context: Context){
 
@@ -59,10 +61,10 @@ class BleManagerRepository (private val context: Context){
     }
 
     fun setFanMode(mode: Byte) {
-        bluetoothService?.writeToCharacteristic(byteArrayOf(4, mode, 0, 0))
+        bluetoothService?.writeToCharacteristic(byteArrayOf(CommandType.MODE.code, mode, 0, 0))
     }
 
     fun setFanSpeed (speed: Byte) {
-       bluetoothService?.writeToCharacteristic(byteArrayOf(2, speed, 0, 0))
+       bluetoothService?.writeToCharacteristic(byteArrayOf(CommandType.SPEED.code, speed, 0, 0))
     }
 }

@@ -1,25 +1,6 @@
 package com.myanshin.headwindcontrol.ui
-
-enum class FanMode(val code: Byte) {
-    OFF(1),
-    HR(2),
-    SPEED(3),
-    MANUAL(4);
-//    SLEEP(5);
-
-    companion object {
-        fun find(code: Byte): FanMode? {
-            return FanMode.entries.find { it.code == code }
-        }
-    }
-}
-
-enum class ConnectionStatus {
-    ACTIVE,
-    INACTIVE,
-    PENDING,
-    SCANNING,
-}
+import com.myanshin.headwindcontrol.ConnectionStatus
+import com.myanshin.headwindcontrol.FanMode
 
 data class AppUiState(
     val isBtAdapterEnabled: Boolean = true,

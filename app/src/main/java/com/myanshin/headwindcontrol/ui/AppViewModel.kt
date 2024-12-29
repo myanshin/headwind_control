@@ -9,18 +9,22 @@ import android.content.Context.RECEIVER_EXPORTED
 import android.content.Intent
 import android.content.IntentFilter
 import android.location.LocationManager
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.myanshin.headwindcontrol.CommandType
+import com.myanshin.headwindcontrol.ConnectionStatus
+import com.myanshin.headwindcontrol.FanMode
 import com.myanshin.headwindcontrol.HeadwindControlApplication
 import com.myanshin.headwindcontrol.MainActivity
+import com.myanshin.headwindcontrol.MessType
 import com.myanshin.headwindcontrol.ble.BleManager
 import com.myanshin.headwindcontrol.data.AppSettingsRepository
 import com.myanshin.headwindcontrol.data.BleManagerRepository
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -70,19 +74,62 @@ class AppViewModel(
                     }
                 }
                 BleManager.ACTION_FAN_STATE_RECEIVED -> {
-                    val currentFanSpeed = intent.getByteArrayExtra("EXTRA_DATA")!![2]
-                    val currentFanMode = if (_uiState.value.requestedFanSpeed == 0.toByte()) {
-                        FanMode.find(intent.getByteArrayExtra("EXTRA_DATA")!![3]) ?: FanMode.MANUAL
-                    } else {
-                        FanMode.MANUAL
-                    }
-                    _uiState.update { currentState ->
-                        currentState.copy(
-                            currentFanSpeed = if (currentFanSpeed == 1.toByte() && currentFanMode !in arrayOf(FanMode.HR,
-                                    FanMode.SPEED))
-                                _uiState.value.currentFanSpeed else currentFanSpeed,
-                            currentFanMode = currentFanMode
-                        )
+
+                    if (intent.getByteArrayExtra("EXTRA_DATA")?.size !=4 )
+                        return
+
+                    val messType = MessType.find(intent.getByteArrayExtra("EXTRA_DATA")!![0])
+                    if (messType == MessType.UPD) {
+                        Log.i("HW_SCAN", "${intent.getByteArrayExtra("EXTRA_DATA")?.toList()}. Waiting to write: ${_uiState.value.waitForCharWrite}")
+                        val newCurrentFanSpeed = intent.getByteArrayExtra("EXTRA_DATA")!![2]
+                        val newCurrentFanMode = FanMode.find(intent.getByteArrayExtra("EXTRA_DATA")!![3])
+                        if ((newCurrentFanSpeed != _uiState.value.currentFanSpeed
+                            || newCurrentFanMode != _uiState.value.currentFanMode)
+                            && !_uiState.value.waitForCharWrite) {
+                            _uiState.update { currentState ->
+                                currentState.copy(
+                                    currentFanSpeed = newCurrentFanSpeed,
+                                    currentFanMode = newCurrentFanMode
+                                )
+                            }
+                        }
+                    } else if (messType == MessType.WR) {
+                        Log.w("HW_SCAN", "${intent.getByteArrayExtra("EXTRA_DATA")?.toList()}")
+                        val commandType = CommandType.find(intent.getByteArrayExtra("EXTRA_DATA")!![1])
+                        if (commandType == CommandType.MODE) {
+                            val newCurrentFanMode =
+                                FanMode.find(intent.getByteArrayExtra("EXTRA_DATA")!![3])
+                            _uiState.update { currentState ->
+                                currentState.copy(
+                                    currentFanMode = newCurrentFanMode,
+                                    waitForCharWrite = false
+                                )
+                            }
+
+                            if (newCurrentFanMode == FanMode.MANUAL && _uiState.value.requestedFanSpeed != 0.toByte()) {
+
+                                val requestedFanSpeed = _uiState.value.requestedFanSpeed
+                                Log.i("HW_SCAN", "Should change speed to $requestedFanSpeed")
+                                _uiState.update { currentState ->
+                                    currentState.copy(
+                                        requestedFanSpeed = 0,
+                                        waitForCharWrite = true
+                                    )
+                                }
+                                setFanSpeed(requestedFanSpeed)
+                            }
+                        }
+                        else if (commandType == CommandType.SPEED) {
+                            val newCurrentFanSpeed =
+                                intent.getByteArrayExtra("EXTRA_DATA")!![3]
+                            _uiState.update { currentState ->
+                                currentState.copy(
+                                    currentFanSpeed = newCurrentFanSpeed,
+                                    waitForCharWrite = false
+                                )
+                            }
+                        }
+
                     }
                 }
                 BleManager.ACTION_DEVICE_NAME_READ -> {
@@ -98,33 +145,33 @@ class AppViewModel(
                             waitForCharWrite = true
                         )
                     }
-                    viewModelScope.launch {
-                        delay(5000)
-                        if (_uiState.value.waitForCharWrite) {
-                            _uiState.update { currentState ->
-                                currentState.copy(
-                                    waitForCharWrite = false
-                                )
-                            }
-                        }
-                    }
+//                    viewModelScope.launch {
+//                        delay(5000)
+//                        if (_uiState.value.waitForCharWrite) {
+//                            _uiState.update { currentState ->
+//                                currentState.copy(
+//                                    waitForCharWrite = false
+//                                )
+//                            }
+//                        }
+//                    }
                 }
-                BleManager.ACTION_GATT_CHAR_WRITE_COMPLETE -> {
-                    _uiState.update { currentState ->
-                        currentState.copy(
-                            waitForCharWrite = false,
-                        )
-                    }
-                    val requestedFanSpeed = _uiState.value.requestedFanSpeed
-                    if (requestedFanSpeed != 0.toByte()) {
-                        _uiState.update { currentState ->
-                            currentState.copy(
-                                requestedFanSpeed = 0,
-                            )
-                        }
-                        setFanSpeed(requestedFanSpeed)
-                    }
-                }
+//                BleManager.ACTION_GATT_CHAR_WRITE_COMPLETE -> {
+//                    _uiState.update { currentState ->
+//                        currentState.copy(
+//                            waitForCharWrite = false,
+//                        )
+//                    }
+//                    val requestedFanSpeed = _uiState.value.requestedFanSpeed
+//                    if (requestedFanSpeed != 0.toByte()) {
+//                        _uiState.update { currentState ->
+//                            currentState.copy(
+//                                requestedFanSpeed = 0,
+//                            )
+//                        }
+//                        setFanSpeed(requestedFanSpeed)
+//                    }
+//                }
                 BleManager.ACTION_GATT_DEVICE_FOUND -> {
                     if (_uiState.value.connectionStatus == ConnectionStatus.SCANNING) {
                         intent.getStringArrayExtra("EXTRA_DATA")?.let {
@@ -175,25 +222,23 @@ class AppViewModel(
                     val controlType =  intent.getIntExtra("CONTROL_TYPE", 0)
                     when (controlType) {
                         MainActivity.FAN_CONTROL_TYPE_MODE_HR -> {
-                            setFanMode(FanMode.HR.code)
+                            setFanMode(FanMode.HR)
                         }
                         MainActivity.FAN_CONTROL_TYPE_SPEED_DECREASE -> {
-                            if (uiState.value.currentFanSpeed > 10)
-                                setFanSpeed((uiState.value.currentFanSpeed - 10).toByte())
-                            else if (uiState.value.currentFanSpeed >= 5)
-                                setFanSpeed((uiState.value.currentFanSpeed - 5).toByte())
-
+                            when  {
+                                uiState.value.currentFanSpeed > 15 -> setFanSpeed((uiState.value.currentFanSpeed - 10).toByte())
+                                uiState.value.currentFanSpeed > 9  -> setFanSpeed((uiState.value.currentFanSpeed - 5).toByte())
+                                uiState.value.currentFanSpeed > 6  -> setFanSpeed(4.toByte())
+                                else -> setFanSpeed(0.toByte())
+                            }
                         }
                         MainActivity.FAN_CONTROL_TYPE_SPEED_INCREASE -> {
-                            if (uiState.value.currentFanSpeed <= 90)
-                                setFanSpeed((uiState.value.currentFanSpeed + 10).toByte())
-                            else if (uiState.value.currentFanSpeed <= 5.toByte())
+                            if (uiState.value.currentFanSpeed < 10)
                                 setFanSpeed((uiState.value.currentFanSpeed + 5).toByte())
+                            else if (uiState.value.currentFanSpeed <= 90)
+                                setFanSpeed((uiState.value.currentFanSpeed + 10).toByte())
                         }
                     }
-
-
-
                 }
             }
         }
@@ -249,8 +294,8 @@ class AppViewModel(
         return bleManagerRepository.disconnectFromFan()
     }
 
-    fun setFanMode(mode: Byte) {
-        return bleManagerRepository.setFanMode(mode)
+    fun setFanMode(mode: FanMode) {
+        return bleManagerRepository.setFanMode(mode.code)
     }
 
     fun setFanSpeed (speed: Byte) {
@@ -262,7 +307,7 @@ class AppViewModel(
                     requestedFanSpeed = speed
                 )
             }
-            return bleManagerRepository.setFanMode(FanMode.MANUAL.code)
+            return setFanMode(FanMode.MANUAL)
         }
     }
 
@@ -285,7 +330,7 @@ class AppViewModel(
             addAction(BleManager.ACTION_FAN_STATE_RECEIVED)
             addAction(BleManager.ACTION_DEVICE_NAME_READ)
             addAction(BleManager.ACTION_GATT_CHAR_WRITE_BEGIN)
-            addAction(BleManager.ACTION_GATT_CHAR_WRITE_COMPLETE)
+//            addAction(BleManager.ACTION_GATT_CHAR_WRITE_COMPLETE)
             addAction(BleManager.ACTION_GATT_DEVICE_FOUND)
             addAction(BluetoothAdapter.ACTION_STATE_CHANGED)
             addAction(LocationManager.PROVIDERS_CHANGED_ACTION)

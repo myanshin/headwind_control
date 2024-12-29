@@ -218,6 +218,7 @@ class BleManager: Service() {
             broadcastUpdate(ACTION_GATT_CHAR_WRITE_BEGIN)
             characteristic.value = valueToWrite
             bluetoothGatt?.writeCharacteristic(characteristic)
+            Log.e(tag, "Char write ${valueToWrite.toList()}")
         } else {
             Log.e(tag, "Characteristic not found!")
         }

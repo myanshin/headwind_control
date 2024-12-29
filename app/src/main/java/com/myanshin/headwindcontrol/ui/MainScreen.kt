@@ -42,6 +42,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.myanshin.headwindcontrol.ConnectionStatus
+import com.myanshin.headwindcontrol.FanMode
 import com.myanshin.headwindcontrol.R
 
 
@@ -185,16 +187,16 @@ fun MainScreen(
 
                 Column {
                     ModeButton(
-                        waitForCharWrite, appUiState.currentFanMode.code,
-                        FanMode.SPEED.code, "SPD", appUiState.connectionStatus
+                        waitForCharWrite, appUiState.currentFanMode,
+                        FanMode.SPEED, "SPD", appUiState.connectionStatus
                     ) { fanMode -> appViewModel.setFanMode(fanMode) }
                     ModeButton(
-                        waitForCharWrite, appUiState.currentFanMode.code,
-                        FanMode.HR.code, "HR", appUiState.connectionStatus
+                        waitForCharWrite, appUiState.currentFanMode,
+                        FanMode.HR, "HR", appUiState.connectionStatus
                     ) { fanMode -> appViewModel.setFanMode(fanMode) }
                     ModeButton(
-                        waitForCharWrite, appUiState.currentFanMode.code,
-                        FanMode.OFF.code, "OFF", appUiState.connectionStatus
+                        waitForCharWrite, appUiState.currentFanMode,
+                        FanMode.OFF, "OFF", appUiState.connectionStatus
                     ) { fanMode -> appViewModel.setFanMode(fanMode) }
                 }
             }
@@ -246,13 +248,13 @@ fun MainScreen(
         ) {
 
             ModeButton(
-                waitForCharWrite, appUiState.currentFanMode.code,
-                FanMode.MANUAL.code, "MAN", appUiState.connectionStatus, Modifier.width(80.dp)
+                waitForCharWrite, appUiState.currentFanMode,
+                FanMode.MANUAL, "MAN", appUiState.connectionStatus, Modifier.width(80.dp)
             ) { }
             SmallIndicator(appUiState.currentFanSpeed)
             ModeButton(
-                waitForCharWrite, appUiState.currentFanMode.code,
-                FanMode.HR.code, "HR", appUiState.connectionStatus, Modifier.width(80.dp)
+                waitForCharWrite, appUiState.currentFanMode,
+                FanMode.HR, "HR", appUiState.connectionStatus, Modifier.width(80.dp)
             ) { }
         }
     }
@@ -278,12 +280,12 @@ fun DeviceConnected(
 @Composable
 fun ModeButton(
     waitForCharWrite: Boolean,
-    currentFanMode: Byte,
-    onClickFanMode: Byte,
+    currentFanMode: FanMode,
+    onClickFanMode: FanMode,
     buttonText: String,
     connectionStatus: ConnectionStatus,
     modifier: Modifier = Modifier,
-    callback: (Byte) -> Unit
+    callback: (FanMode) -> Unit
 ) {
 //    Button(
 //        onClick = {
