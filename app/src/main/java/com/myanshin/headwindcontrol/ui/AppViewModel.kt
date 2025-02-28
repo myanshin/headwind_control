@@ -106,13 +106,12 @@ class AppViewModel(
                                 )
                             }
 
-                            if (newCurrentFanMode == FanMode.MANUAL && _uiState.value.requestedFanSpeed != 0.toByte()) {
-
+                            if (newCurrentFanMode == FanMode.MANUAL && _uiState.value.requestedFanSpeed != (-1).toByte()) {
                                 val requestedFanSpeed = _uiState.value.requestedFanSpeed
                                 Log.i("HW_SCAN", "Should change speed to $requestedFanSpeed")
                                 _uiState.update { currentState ->
                                     currentState.copy(
-                                        requestedFanSpeed = 0,
+                                        requestedFanSpeed = -1,
                                         waitForCharWrite = true
                                     )
                                 }
@@ -145,33 +144,7 @@ class AppViewModel(
                             waitForCharWrite = true
                         )
                     }
-//                    viewModelScope.launch {
-//                        delay(5000)
-//                        if (_uiState.value.waitForCharWrite) {
-//                            _uiState.update { currentState ->
-//                                currentState.copy(
-//                                    waitForCharWrite = false
-//                                )
-//                            }
-//                        }
-//                    }
                 }
-//                BleManager.ACTION_GATT_CHAR_WRITE_COMPLETE -> {
-//                    _uiState.update { currentState ->
-//                        currentState.copy(
-//                            waitForCharWrite = false,
-//                        )
-//                    }
-//                    val requestedFanSpeed = _uiState.value.requestedFanSpeed
-//                    if (requestedFanSpeed != 0.toByte()) {
-//                        _uiState.update { currentState ->
-//                            currentState.copy(
-//                                requestedFanSpeed = 0,
-//                            )
-//                        }
-//                        setFanSpeed(requestedFanSpeed)
-//                    }
-//                }
                 BleManager.ACTION_GATT_DEVICE_FOUND -> {
                     if (_uiState.value.connectionStatus == ConnectionStatus.SCANNING) {
                         intent.getStringArrayExtra("EXTRA_DATA")?.let {

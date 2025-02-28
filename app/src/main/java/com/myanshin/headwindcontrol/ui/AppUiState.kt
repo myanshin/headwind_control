@@ -8,7 +8,7 @@ data class AppUiState(
     val savedDeviceAddress: String = "",
     val connectedDeviceName: String = "",
     val currentFanSpeed: Byte = 0,
-    val requestedFanSpeed: Byte = 0,
+    val requestedFanSpeed: Byte = -1,
     val currentFanMode: FanMode = FanMode.OFF,
     val isDeviceConnected: Boolean = false,
     val connectionStatus: ConnectionStatus = ConnectionStatus.INACTIVE,
