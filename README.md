@@ -4,7 +4,13 @@
 
 Welcome to the Wahoo Headwind Control app for Android!
 
-This app is used to control Wahoo Headwind smart fan via Bluetooth Low Energy (BLE) from Android srartphone.
+This app is used to control Wahoo Headwind smart fan via Bluetooth Low Energy (BLE) from Android smartphone.
+
+Features:
+- Scan for Bluetooth devices, connect to Headwind fan.
+- Auto save last connected fan's MAC address.
+- Set fan speed and mode.
+- Works in floating screen mode (PiP).
 
 ## Data collected by the app
 
@@ -17,3 +23,4 @@ This app requires bluetooth and location permissions. Permissions may vary by An
 
 
 https://developer.android.com/develop/connectivity/bluetooth/bt-permissions
+
