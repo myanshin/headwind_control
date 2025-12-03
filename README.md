@@ -24,3 +24,6 @@ This app requires bluetooth and location permissions. Permissions may vary by An
 
 https://developer.android.com/develop/connectivity/bluetooth/bt-permissions
 
+## Coming soon
+
+Persistent notification with controls in notification shade and on the lock screen.
