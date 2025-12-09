@@ -7,9 +7,9 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.os.IBinder
 import android.util.Log
-import com.myanshin.headwindcontrol.CommandType
-import com.myanshin.headwindcontrol.ble.BleManager
-import com.myanshin.headwindcontrol.ble.BleManager.LocalBinder
+import com.myanshin.headwindcontrol.app.CommandType
+import com.myanshin.headwindcontrol.data.ble.BleManager
+import com.myanshin.headwindcontrol.data.ble.BleManager.LocalBinder
 
 
 class BleManagerRepository (private val context: Context){

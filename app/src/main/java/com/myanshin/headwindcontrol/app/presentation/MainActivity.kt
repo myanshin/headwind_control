@@ -1,9 +1,10 @@
-package com.myanshin.headwindcontrol
+package com.myanshin.headwindcontrol.app.presentation
 
 import android.app.PendingIntent
 import android.app.PictureInPictureParams
 import android.app.RemoteAction
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.res.Configuration
 import android.graphics.Rect
 import android.graphics.drawable.Icon
@@ -24,13 +25,17 @@ import androidx.compose.ui.graphics.toAndroidRectF
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.core.graphics.toRect
-import com.myanshin.headwindcontrol.ui.CheckBluetoothPermissions
-import com.myanshin.headwindcontrol.ui.MainScreen
-import com.myanshin.headwindcontrol.ui.theme.HeadwindControlTheme
-
+import androidx.lifecycle.ViewModelProvider
+import com.myanshin.headwindcontrol.R
+import com.myanshin.headwindcontrol.app.ServiceLocator
+import com.myanshin.headwindcontrol.app.presentation.NotificationService
+import com.myanshin.headwindcontrol.app.presentation.theme.HeadwindControlTheme
+import com.myanshin.headwindcontrol.data.ble.BleManager
 
 class MainActivity : ComponentActivity() {
 
+    private lateinit var appViewModel: AppViewModel
+    private val broadcastReceiver = UIBroadcastReceiver()
     var isPipModeEnabled = false
     private lateinit var pipParams: PictureInPictureParams
 
@@ -46,20 +51,22 @@ class MainActivity : ComponentActivity() {
         setContent {
             HeadwindControlTheme {
                 Surface(
-                    modifier = Modifier
+                    modifier = Modifier.Companion
                         .fillMaxSize()
                         .safeDrawingPadding()
                         .onGloballyPositioned { layoutCoordinates ->
-                            val sourceRect = layoutCoordinates.boundsInWindow().toAndroidRectF().toRect()
-                            val aspectRect = Rect(0,0,sourceRect.width(),sourceRect.width() * 9 / 16)
+                            val sourceRect =
+                                layoutCoordinates.boundsInWindow().toAndroidRectF().toRect()
+                            val aspectRect =
+                                Rect(0, 0, sourceRect.width(), sourceRect.width() * 9 / 16)
                             pipParams = updatePictureInPictureParams(aspectRect)
                         },
                     color = MaterialTheme.colorScheme.background
                 ) {
                     if (!isPipModeEnabled)
-                        CheckBluetoothPermissions(this) { MainScreen(isPipModeEnabled = false) }
+                        CheckBluetoothPermissions(this) { MainScreen(appViewModel, false) }
                     else
-                        MainScreen(isPipModeEnabled = true)
+                        MainScreen(appViewModel, true)
                 }
             }
         }
@@ -69,6 +76,28 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent()
+
+        appViewModel = ViewModelProvider(this, AppViewModel.Factory)[AppViewModel::class.java]
+        ServiceLocator.appViewModel = appViewModel
+
+        val startIntent = Intent(this, NotificationService::class.java)
+            .apply { action = NotificationService.Actions.START.toString() }
+        startService(startIntent)
+
+        val filter = IntentFilter().apply {
+            addAction("BROADCAST_TEST_ACTION")
+            addAction(BleManager.Companion.ACTION_FAN_STATE_RECEIVED)
+            addAction(ACTION_FAN_CONTROL)
+        }
+        registerReceiver(broadcastReceiver, filter, RECEIVER_EXPORTED)
+    }
+
+    override fun onDestroy() {
+        val intent = Intent(this, NotificationService::class.java).apply {
+            action = NotificationService.Actions.STOP.toString()
+        }
+        startService(intent)
+        super.onDestroy()
     }
 
     override fun onUserLeaveHint() {
@@ -88,7 +117,6 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun updatePictureInPictureParams(sourceRect: Rect = Rect()): PictureInPictureParams {
-
         val aspectRatio = Rational(16, 9)
         val pipParams = PictureInPictureParams.Builder()
             .setSourceRectHint(sourceRect)

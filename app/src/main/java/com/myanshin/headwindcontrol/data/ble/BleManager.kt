@@ -1,4 +1,4 @@
-package com.myanshin.headwindcontrol.ble
+package com.myanshin.headwindcontrol.data.ble
 
 import android.annotation.SuppressLint
 import android.app.Service

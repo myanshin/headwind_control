@@ -1,4 +1,4 @@
-package com.myanshin.headwindcontrol.ui.theme
+package com.myanshin.headwindcontrol.app.presentation.theme
 
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme

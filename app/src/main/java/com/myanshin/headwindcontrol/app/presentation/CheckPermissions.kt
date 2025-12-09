@@ -1,4 +1,4 @@
-package com.myanshin.headwindcontrol.ui
+package com.myanshin.headwindcontrol.app.presentation
 
 import android.Manifest
 import android.annotation.SuppressLint
@@ -48,16 +48,23 @@ import kotlinx.coroutines.launch
 
 
 val requiredPermissions =
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         arrayOf(
             Manifest.permission.BLUETOOTH_SCAN,
-            Manifest.permission.BLUETOOTH_CONNECT
+            Manifest.permission.BLUETOOTH_CONNECT,
+            Manifest.permission.POST_NOTIFICATIONS
+        )
+    }
+    else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        arrayOf(
+            Manifest.permission.BLUETOOTH_SCAN,
+            Manifest.permission.BLUETOOTH_CONNECT,
         )
     } else {
         arrayOf(
-        Manifest.permission.BLUETOOTH,
-        Manifest.permission.ACCESS_FINE_LOCATION,
-        Manifest.permission.ACCESS_COARSE_LOCATION
+            Manifest.permission.BLUETOOTH,
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_COARSE_LOCATION,
         )
     }
 

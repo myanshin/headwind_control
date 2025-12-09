@@ -1,6 +1,6 @@
-package com.myanshin.headwindcontrol.ui
-import com.myanshin.headwindcontrol.ConnectionStatus
-import com.myanshin.headwindcontrol.FanMode
+package com.myanshin.headwindcontrol.app.presentation
+import com.myanshin.headwindcontrol.app.ConnectionStatus
+import com.myanshin.headwindcontrol.app.FanMode
 
 data class AppUiState(
     val isBtAdapterEnabled: Boolean = true,

@@ -1,4 +1,4 @@
-package com.myanshin.headwindcontrol.ui
+package com.myanshin.headwindcontrol.app.presentation
 
 import android.annotation.SuppressLint
 import android.os.Build
@@ -41,23 +41,20 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.myanshin.headwindcontrol.ConnectionStatus
-import com.myanshin.headwindcontrol.FanMode
+import com.myanshin.headwindcontrol.app.ConnectionStatus
+import com.myanshin.headwindcontrol.app.FanMode
 import com.myanshin.headwindcontrol.R
 
 
 @SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
 fun MainScreen(
-    appViewModel: AppViewModel = viewModel(factory = AppViewModel.Factory),
+    appViewModel: AppViewModel,
     isPipModeEnabled: Boolean
 ) {
     val appUiState by appViewModel.uiState.collectAsState()
     val scrollState = rememberScrollState()
     val waitForCharWrite = false
-
-//    Log.i("HW_SCAN", "Pip mode enabled: $isPipModeEnabled")
 
     if (!isPipModeEnabled) {
         Column(
@@ -122,26 +119,14 @@ fun MainScreen(
                         )
 
                     }
-                    Button(
-                        enabled = appUiState.connectionStatus == ConnectionStatus.INACTIVE &&
-                                (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S || appUiState.isLocationEnabled) &&
-                                appUiState.isBtAdapterEnabled,
-                        shape = RoundedCornerShape(50),
-                        contentPadding = PaddingValues(0.dp),
-                        modifier = Modifier
-                            .size(48.dp)
-                            .constrainAs(scanButton) {
+                    SearchButton(
+                        Modifier.constrainAs(scanButton) {
                                 end.linkTo(parent.end)
                             },
-                        onClick = { appViewModel.scanBleDevices() },
-
-                        ) {
-                        Icon(
-                            Icons.Filled.Search,
-                            "Scan for devices",
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
+                        appUiState.connectionStatus,
+                        appUiState.isLocationEnabled,
+                        appUiState.isBtAdapterEnabled
+                    ) { appViewModel.scanBleDevices() }
                 }
             }
 
@@ -207,10 +192,6 @@ fun MainScreen(
                     .fillMaxWidth()
             ) {
 
-//                SpeedButton(
-//                    waitForCharWrite, appUiState.currentFanSpeed, appUiState.currentFanMode,
-//                    20, "20", appUiState.connectionStatus
-//                ) { fanSpeed -> appViewModel.setFanSpeed(fanSpeed) }
                 SpeedButton(
                     waitForCharWrite, appUiState.currentFanSpeed, appUiState.currentFanMode,
                     25, "25", appUiState.connectionStatus
@@ -287,21 +268,6 @@ fun ModeButton(
     modifier: Modifier = Modifier,
     callback: (FanMode) -> Unit
 ) {
-//    Button(
-//        onClick = {
-//            callback(onClickFanMode)
-//        },
-//        enabled = !waitForCharWrite && connectionStatus == ConnectionStatus.ACTIVE,
-//        colors = ButtonDefaults.buttonColors(
-//            containerColor = if (currentFanMode == onClickFanMode) MaterialTheme.colorScheme.tertiary else Color.Unspecified,
-//            contentColor = Color.White,
-//        ),
-//        modifier = Modifier.width(80.dp)
-//    )
-//        {
-//            Text(text = buttonText)
-//        }
-
     TextButton(
         onClick = {
             callback(onClickFanMode)
@@ -338,20 +304,6 @@ fun SpeedButton(
     modifier: Modifier = Modifier,
     callback: (Byte) -> Unit
 ) {
-//    Button(
-//        onClick = {
-//            callback(onClickFanSpeed)
-//        },
-//        enabled = !waitForCharWrite && connectionStatus == ConnectionStatus.ACTIVE,
-//        colors = ButtonDefaults.buttonColors(
-//            containerColor = if (currentFanSpeed == onClickFanSpeed && currentFanMode == FanMode.MANUAL)
-//                MaterialTheme.colorScheme.tertiary else Color.Unspecified,
-//            contentColor = Color.White,
-//        ),
-//        shape = RoundedCornerShape(50),
-//        contentPadding = PaddingValues(0.dp),
-//        modifier = Modifier.size(48.dp)
-//    )
     TextButton(
         onClick = {
             callback(onClickFanSpeed)
@@ -375,6 +327,33 @@ fun SpeedButton(
     }
 
 }
+
+@Composable
+fun SearchButton(
+    modifier: Modifier,
+    connectionStatus: ConnectionStatus,
+    isLocationEnabled: Boolean,
+    isBtAdapterEnabled: Boolean,
+    callback: () -> Unit
+) {
+    Button(
+        enabled = connectionStatus == ConnectionStatus.INACTIVE &&
+                (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S || isLocationEnabled) &&
+                isBtAdapterEnabled,
+        shape = RoundedCornerShape(50),
+        contentPadding = PaddingValues(0.dp),
+        modifier = modifier
+            .size(48.dp),
+        onClick = { callback() },
+        ) {
+        Icon(
+            Icons.Filled.Search,
+            "Scan for devices",
+            modifier = Modifier.size(20.dp)
+        )
+    }
+}
+
 
 @Composable
 fun IndeterminateCircularIndicator(
