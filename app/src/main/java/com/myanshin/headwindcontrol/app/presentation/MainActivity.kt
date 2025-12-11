@@ -1,4 +1,4 @@
-package com.myanshin.headwindcontrol
+package com.myanshin.headwindcontrol.app.presentation
 
 import android.app.PendingIntent
 import android.app.PictureInPictureParams
@@ -7,7 +7,6 @@ import android.content.Intent
 import android.content.res.Configuration
 import android.graphics.Rect
 import android.graphics.drawable.Icon
-import android.os.Build
 import android.os.Bundle
 import android.util.Rational
 import androidx.activity.ComponentActivity
@@ -24,14 +23,21 @@ import androidx.compose.ui.graphics.toAndroidRectF
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.core.graphics.toRect
-import com.myanshin.headwindcontrol.ui.CheckBluetoothPermissions
-import com.myanshin.headwindcontrol.ui.MainScreen
-import com.myanshin.headwindcontrol.ui.theme.HeadwindControlTheme
-
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import com.myanshin.headwindcontrol.R
+import com.myanshin.headwindcontrol.app.ServiceLocator
+import com.myanshin.headwindcontrol.app.presentation.theme.HeadwindControlTheme
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
 
-    var isPipModeEnabled = false
+    private lateinit var appViewModel: AppViewModel
+
+    private var isNotificationEnabled: Boolean? = null
+    private var isPipModeEnabled = false
     private lateinit var pipParams: PictureInPictureParams
 
     companion object {
@@ -50,16 +56,18 @@ class MainActivity : ComponentActivity() {
                         .fillMaxSize()
                         .safeDrawingPadding()
                         .onGloballyPositioned { layoutCoordinates ->
-                            val sourceRect = layoutCoordinates.boundsInWindow().toAndroidRectF().toRect()
-                            val aspectRect = Rect(0,0,sourceRect.width(),sourceRect.width() * 9 / 16)
+                            val sourceRect =
+                                layoutCoordinates.boundsInWindow().toAndroidRectF().toRect()
+                            val aspectRect =
+                                Rect(0, 0, sourceRect.width(), sourceRect.width() * 9 / 16)
                             pipParams = updatePictureInPictureParams(aspectRect)
                         },
                     color = MaterialTheme.colorScheme.background
                 ) {
                     if (!isPipModeEnabled)
-                        CheckBluetoothPermissions(this) { MainScreen(isPipModeEnabled = false) }
+                        CheckBluetoothPermissions(this) { MainScreen(appViewModel, false) { enterPip() } }
                     else
-                        MainScreen(isPipModeEnabled = true)
+                        MainScreen(appViewModel, true) { enterPip() }
                 }
             }
         }
@@ -69,13 +77,15 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent()
+
+        appViewModel = ViewModelProvider(this, AppViewModel.Factory)[AppViewModel::class.java]
+        ServiceLocator.appViewModel = appViewModel
+        collectUiState(appViewModel)
     }
 
-    override fun onUserLeaveHint() {
-        super.onUserLeaveHint()
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
-            enterPictureInPictureMode(pipParams)
-        }
+    override fun onDestroy() {
+        stopNotificationService()
+        super.onDestroy()
     }
 
     override fun onPictureInPictureModeChanged(
@@ -87,8 +97,34 @@ class MainActivity : ComponentActivity() {
         setContent()
     }
 
-    private fun updatePictureInPictureParams(sourceRect: Rect = Rect()): PictureInPictureParams {
+    private fun collectUiState(appViewModel: AppViewModel) {
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                appViewModel.uiState.collect { uiState ->
+                    if (isNotificationEnabled != uiState.isNotificationEnabled){
+                        isNotificationEnabled = uiState.isNotificationEnabled
+                        if (isNotificationEnabled == true) { startNotificationService() }
+                        else {stopNotificationService() }
+                    }
+                }
+            }
+        }
+    }
 
+    private fun startNotificationService() {
+        val startIntent = Intent(this, NotificationService::class.java)
+            .apply { action = NotificationService.Actions.START.toString() }
+        startService(startIntent)
+    }
+
+    private fun stopNotificationService() {
+        val intent = Intent(this, NotificationService::class.java).apply {
+            action = NotificationService.Actions.STOP.toString()
+        }
+        startService(intent)
+    }
+
+    private fun updatePictureInPictureParams(sourceRect: Rect = Rect()): PictureInPictureParams {
         val aspectRatio = Rational(16, 9)
         val pipParams = PictureInPictureParams.Builder()
             .setSourceRectHint(sourceRect)
@@ -113,11 +149,6 @@ class MainActivity : ComponentActivity() {
                 )
             )
 
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            pipParams
-                .setAutoEnterEnabled(true)
-        }
         return pipParams.build().also {
             setPictureInPictureParams(it)
         }
@@ -141,6 +172,10 @@ class MainActivity : ComponentActivity() {
                 PendingIntent.FLAG_IMMUTABLE,
             ),
         )
+    }
+
+    fun enterPip() {
+        enterPictureInPictureMode(pipParams)
     }
 
 }

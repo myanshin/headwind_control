@@ -1,4 +1,4 @@
-package com.myanshin.headwindcontrol.ui.theme
+package com.myanshin.headwindcontrol.app.presentation.theme
 
 import androidx.compose.ui.graphics.Color
 

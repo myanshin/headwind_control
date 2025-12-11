@@ -1,4 +1,4 @@
-package com.myanshin.headwindcontrol.ui
+package com.myanshin.headwindcontrol.app.presentation
 
 import android.annotation.SuppressLint
 import android.app.Application
@@ -9,20 +9,18 @@ import android.content.Context.RECEIVER_EXPORTED
 import android.content.Intent
 import android.content.IntentFilter
 import android.location.LocationManager
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import com.myanshin.headwindcontrol.CommandType
-import com.myanshin.headwindcontrol.ConnectionStatus
-import com.myanshin.headwindcontrol.FanMode
-import com.myanshin.headwindcontrol.HeadwindControlApplication
-import com.myanshin.headwindcontrol.MainActivity
-import com.myanshin.headwindcontrol.MessType
-import com.myanshin.headwindcontrol.ble.BleManager
+import com.myanshin.headwindcontrol.app.CommandType
+import com.myanshin.headwindcontrol.app.ConnectionStatus
+import com.myanshin.headwindcontrol.app.FanMode
+import com.myanshin.headwindcontrol.app.HeadwindControlApplication
+import com.myanshin.headwindcontrol.app.MessType
+import com.myanshin.headwindcontrol.data.ble.BleManager
 import com.myanshin.headwindcontrol.data.AppSettingsRepository
 import com.myanshin.headwindcontrol.data.BleManagerRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -39,6 +37,7 @@ class AppViewModel(
 ) : ViewModel() {
 
     private val context: Context = application.applicationContext
+
     private val _uiState = MutableStateFlow(AppUiState())
 
     val uiState: StateFlow<AppUiState> = _uiState.asStateFlow()
@@ -59,7 +58,6 @@ class AppViewModel(
                         currentState.copy(
                             isDeviceConnected = true,
                             connectionStatus = ConnectionStatus.ACTIVE,
-//                            connectedDeviceName = intent.getByteArrayExtra("EXTRA_DATA")!!.decodeToString()
                         )
                     }
                 }
@@ -74,13 +72,10 @@ class AppViewModel(
                     }
                 }
                 BleManager.ACTION_FAN_STATE_RECEIVED -> {
-
                     if (intent.getByteArrayExtra("EXTRA_DATA")?.size !=4 )
                         return
-
                     val messType = MessType.find(intent.getByteArrayExtra("EXTRA_DATA")!![0])
                     if (messType == MessType.UPD) {
-                        Log.i("HW_SCAN", "${intent.getByteArrayExtra("EXTRA_DATA")?.toList()}. Waiting to write: ${_uiState.value.waitForCharWrite}")
                         val newCurrentFanSpeed = intent.getByteArrayExtra("EXTRA_DATA")!![2]
                         val newCurrentFanMode = FanMode.find(intent.getByteArrayExtra("EXTRA_DATA")!![3])
                         if ((newCurrentFanSpeed != _uiState.value.currentFanSpeed
@@ -94,7 +89,6 @@ class AppViewModel(
                             }
                         }
                     } else if (messType == MessType.WR) {
-                        Log.w("HW_SCAN", "${intent.getByteArrayExtra("EXTRA_DATA")?.toList()}")
                         val commandType = CommandType.find(intent.getByteArrayExtra("EXTRA_DATA")!![1])
                         if (commandType == CommandType.MODE) {
                             val newCurrentFanMode =
@@ -108,7 +102,6 @@ class AppViewModel(
 
                             if (newCurrentFanMode == FanMode.MANUAL && _uiState.value.requestedFanSpeed != (-1).toByte()) {
                                 val requestedFanSpeed = _uiState.value.requestedFanSpeed
-                                Log.i("HW_SCAN", "Should change speed to $requestedFanSpeed")
                                 _uiState.update { currentState ->
                                     currentState.copy(
                                         requestedFanSpeed = -1,
@@ -227,10 +220,11 @@ class AppViewModel(
     // Collect settings flow from AppSettingsRepository
     private fun collectAppSettingsFlow() {
         viewModelScope.launch {
-            appSettingsRepository.savedDeviceAddress.collect { newAddress ->
+            appSettingsRepository.appSettingsFlow.collect { appSettings ->
                 _uiState.update { currentState ->
                     currentState.copy(
-                        savedDeviceAddress = newAddress
+                        savedDeviceAddress = appSettings.savedDeviceAddress,
+                        isNotificationEnabled = appSettings.isNotificationEnabled
                     )
                 }
             }
@@ -284,6 +278,17 @@ class AppViewModel(
         }
     }
 
+    fun toggleNotificationEnabled(isEnabled: Boolean) {
+        _uiState.update { currentState ->
+            currentState.copy(
+                isNotificationEnabled = isEnabled
+            )
+        }
+        viewModelScope.launch {
+            appSettingsRepository.setIsNotificationEnabled(isEnabled)
+        }
+    }
+
     private fun checkLocationEnabled() {
         val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
         _uiState.update { currentState ->
@@ -303,7 +308,6 @@ class AppViewModel(
             addAction(BleManager.ACTION_FAN_STATE_RECEIVED)
             addAction(BleManager.ACTION_DEVICE_NAME_READ)
             addAction(BleManager.ACTION_GATT_CHAR_WRITE_BEGIN)
-//            addAction(BleManager.ACTION_GATT_CHAR_WRITE_COMPLETE)
             addAction(BleManager.ACTION_GATT_DEVICE_FOUND)
             addAction(BluetoothAdapter.ACTION_STATE_CHANGED)
             addAction(LocationManager.PROVIDERS_CHANGED_ACTION)

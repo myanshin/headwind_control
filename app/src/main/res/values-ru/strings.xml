@@ -9,4 +9,8 @@
     <string name="approve">ОК</string>
     <string name="enable_location_service">Вы должны включить сервис определения местоположения (Геоданные) для поиска BLE устройств!</string>
     <string name="bluetooth_disabled">Bluetooth отключен</string>
+    <string name="notifications">Уведомления</string>
+    <string name="ble_search">Поиск</string>
+    <string name="notification_header">"Скорость: "</string>
+    <string name="notification_text" >"Режим: "</string>
 </resources>

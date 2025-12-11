@@ -1,7 +1,10 @@
-package com.myanshin.headwindcontrol
+package com.myanshin.headwindcontrol.app
 
 import android.app.Application
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.content.Context
+import android.os.Build
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
@@ -57,7 +60,6 @@ enum class ConnectionStatus {
 }
 
 
-
 class HeadwindControlApplication: Application() {
 
     lateinit var appSettingsRepository: AppSettingsRepository
@@ -65,6 +67,19 @@ class HeadwindControlApplication: Application() {
 
     override fun onCreate() {
         super.onCreate()
+        val channel = NotificationChannel(
+            "running_channel",
+            "Running Notifications",
+            NotificationManager.IMPORTANCE_HIGH
+        ).apply {
+            enableLights(false)
+            enableVibration(false)
+            setSound(null, null)
+        }
+
+
+        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.createNotificationChannel(channel)
         appSettingsRepository = AppSettingsRepository(dataStore)
         bleManagerRepository = BleManagerRepository(this)
     }
