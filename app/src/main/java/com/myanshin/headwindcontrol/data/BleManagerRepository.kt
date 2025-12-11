@@ -14,8 +14,8 @@ import com.myanshin.headwindcontrol.data.ble.BleManager.LocalBinder
 
 class BleManagerRepository (private val context: Context){
 
-    val TAG = "HW_SCAN"
-    var bluetoothService : BleManager? = null
+    private val tag = "HW_SCAN"
+    private var bluetoothService : BleManager? = null
 
     //BLE service
 
@@ -27,10 +27,10 @@ class BleManagerRepository (private val context: Context){
             bluetoothService = (service as LocalBinder).getService()
             bluetoothService?.let { bluetooth ->
                 if (!bluetooth.initialize()) {
-                    Log.e(TAG, "Unable to initialize Bluetooth")
+                    Log.e(tag, "Unable to initialize Bluetooth")
                 }
             }
-            Log.i(TAG, "BLE service started $bluetoothService")
+            Log.i(tag, "BLE service started $bluetoothService")
         }
 
         override fun onServiceDisconnected(className: ComponentName) {
@@ -48,7 +48,7 @@ class BleManagerRepository (private val context: Context){
     }
 
     fun scanBleDevices() {
-        Log.i(TAG, "Init scan. BLE Service $bluetoothService")
+        Log.i(tag, "Init scan. BLE Service $bluetoothService")
         bluetoothService?.startScan()
     }
 

@@ -19,7 +19,6 @@ import com.myanshin.headwindcontrol.app.CommandType
 import com.myanshin.headwindcontrol.app.ConnectionStatus
 import com.myanshin.headwindcontrol.app.FanMode
 import com.myanshin.headwindcontrol.app.HeadwindControlApplication
-import com.myanshin.headwindcontrol.app.presentation.MainActivity
 import com.myanshin.headwindcontrol.app.MessType
 import com.myanshin.headwindcontrol.data.ble.BleManager
 import com.myanshin.headwindcontrol.data.AppSettingsRepository
@@ -44,7 +43,7 @@ class AppViewModel(
     val uiState: StateFlow<AppUiState> = _uiState.asStateFlow()
 
     // Action on receiving broadcast messages from BleManager
-    val gattUpdateReceiver: BroadcastReceiver = object : BroadcastReceiver() {
+    private val gattUpdateReceiver: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             when (intent.action) {
                 BleManager.BLUETOOTH_DISABLED -> {
@@ -59,7 +58,6 @@ class AppViewModel(
                         currentState.copy(
                             isDeviceConnected = true,
                             connectionStatus = ConnectionStatus.ACTIVE,
-//                            connectedDeviceName = intent.getByteArrayExtra("EXTRA_DATA")!!.decodeToString()
                         )
                     }
                 }
@@ -74,10 +72,8 @@ class AppViewModel(
                     }
                 }
                 BleManager.ACTION_FAN_STATE_RECEIVED -> {
-
                     if (intent.getByteArrayExtra("EXTRA_DATA")?.size !=4 )
                         return
-
                     val messType = MessType.find(intent.getByteArrayExtra("EXTRA_DATA")!![0])
                     if (messType == MessType.UPD) {
                         val newCurrentFanSpeed = intent.getByteArrayExtra("EXTRA_DATA")!![2]
@@ -224,10 +220,11 @@ class AppViewModel(
     // Collect settings flow from AppSettingsRepository
     private fun collectAppSettingsFlow() {
         viewModelScope.launch {
-            appSettingsRepository.savedDeviceAddress.collect { newAddress ->
+            appSettingsRepository.appSettingsFlow.collect { appSettings ->
                 _uiState.update { currentState ->
                     currentState.copy(
-                        savedDeviceAddress = newAddress
+                        savedDeviceAddress = appSettings.savedDeviceAddress,
+                        isNotificationEnabled = appSettings.isNotificationEnabled
                     )
                 }
             }
@@ -278,6 +275,17 @@ class AppViewModel(
                 )
             }
             return setFanMode(FanMode.MANUAL)
+        }
+    }
+
+    fun toggleNotificationEnabled(isEnabled: Boolean) {
+        _uiState.update { currentState ->
+            currentState.copy(
+                isNotificationEnabled = isEnabled
+            )
+        }
+        viewModelScope.launch {
+            appSettingsRepository.setIsNotificationEnabled(isEnabled)
         }
     }
 

@@ -47,7 +47,7 @@
         </activity>
         <service
             android:name=".data.ble.BleManager"
-            android:foregroundServiceType="location" />
+            android:foregroundServiceType="connectedDevice" />
         <service
             android:name=".app.presentation.NotificationService"
             android:exported="true"

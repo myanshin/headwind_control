@@ -3,6 +3,7 @@ import com.myanshin.headwindcontrol.app.ConnectionStatus
 import com.myanshin.headwindcontrol.app.FanMode
 
 data class AppUiState(
+    val isNotificationEnabled: Boolean? = null,
     val isBtAdapterEnabled: Boolean = true,
     val isLocationEnabled: Boolean = false,
     val savedDeviceAddress: String = "",

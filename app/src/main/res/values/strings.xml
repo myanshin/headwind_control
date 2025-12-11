@@ -9,4 +9,8 @@
     <string name="approve">Approve</string>
     <string name="enable_location_service">You must enable location service to perform BLE devices scan!</string>
     <string name="bluetooth_disabled">Bluetooth disabled</string>
+    <string name="notifications">Notifications</string>
+    <string name="ble_search">Search</string>
+    <string name="notification_header">"Speed: "</string>
+    <string name="notification_text" >"Mode: "</string>
 </resources>

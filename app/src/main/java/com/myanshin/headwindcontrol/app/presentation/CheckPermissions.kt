@@ -87,7 +87,6 @@ fun CheckBluetoothPermissions(activity: Activity, composable: @Composable () -> 
         mutableStateOf(decideCurrentPermissionStatus(locationPermissionsGranted, shouldShowPermissionRationale))
     }
 
-
     val locationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions(),
         onResult = { permissions ->
@@ -127,7 +126,6 @@ fun CheckBluetoothPermissions(activity: Activity, composable: @Composable () -> 
         SnackbarHost(hostState = snackBarHostState)
     }) {
             contentPadding ->
-
         if (!locationPermissionsGranted) {
             Column(modifier = Modifier.fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally) {

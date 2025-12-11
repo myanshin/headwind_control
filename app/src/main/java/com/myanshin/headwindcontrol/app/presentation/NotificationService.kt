@@ -1,29 +1,37 @@
 package com.myanshin.headwindcontrol.app.presentation
 
+import android.Manifest
 import android.app.Notification
 import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
-import android.util.Log
+import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.myanshin.headwindcontrol.R
 import com.myanshin.headwindcontrol.app.ServiceLocator
-import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 
 class NotificationService : Service() {
 
+// coroutine scope for UI State flow collection
+    private val serviceJob = Job()
+    private val serviceScope = CoroutineScope(Dispatchers.Main + serviceJob)
+
+    private var appViewModel: AppViewModel? = null
+
     override fun onBind(intent: Intent?): IBinder? {
-        // Return your binder here
         return null
     }
-
-    var appViewModel: AppViewModel? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when(intent?.action) {
@@ -32,15 +40,13 @@ class NotificationService : Service() {
                 appViewModel = ServiceLocator.appViewModel
                 collectUIState()
             }
-            Actions.STOP.toString() -> stopSelf()
-            Actions.UPDATE_NOTIFICATION.toString() -> {
-                val currentFanSpeed = intent.getByteExtra("SPEED", 0)
-                val currentFanMode = intent.getStringExtra("MODE")
-                updateNotification("Speed: $currentFanSpeed", "Mode: $currentFanMode")
+            Actions.STOP.toString() -> {
+                stop()
             }
         }
         return super.onStartCommand(intent, flags, startId)
     }
+
 
     private fun createPendingIntent(context: Context, controlType: Int): PendingIntent {
         val intent = Intent(MainActivity.ACTION_FAN_CONTROL).
@@ -67,46 +73,67 @@ class NotificationService : Service() {
             .addAction(
                 R.drawable.speed_decrease_24dp,
                 "Speed Decrease",
-                createPendingIntent(this, MainActivity.Companion.FAN_CONTROL_TYPE_SPEED_DECREASE)
+                createPendingIntent(this, MainActivity.FAN_CONTROL_TYPE_SPEED_DECREASE)
             )
             .addAction(
                 R.drawable.speed_increase_24dp,
                 "Speed Increase",
-                createPendingIntent(this, MainActivity.Companion.FAN_CONTROL_TYPE_SPEED_INCREASE)
+                createPendingIntent(this, MainActivity.FAN_CONTROL_TYPE_SPEED_INCREASE)
             )
             .addAction(
                 R.drawable.ecg_heart_24dp,
                 "Mode HR",
-                createPendingIntent(this, MainActivity.Companion.FAN_CONTROL_TYPE_MODE_HR)
+                createPendingIntent(this, MainActivity.FAN_CONTROL_TYPE_MODE_HR)
             )
             .build()
     }
 
     private fun start() {
          if (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            startForeground(1, createNotification("Заголовок", "Текст"))
+            startForeground(1, createNotification(getString(R.string.notification_header),
+                getString(
+                    R.string.notification_text
+                )))
         } else {
-            startForeground(1, createNotification("Заголовок", "Текст"),
+            startForeground(1, createNotification(getString(R.string.notification_header), getString(
+                R.string.notification_text
+            )),
                 ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE
             )
         }
     }
 
+    private fun stop() {
+        serviceScope.cancel()
+        stopForeground(STOP_FOREGROUND_REMOVE)
+        stopSelf()
+    }
+
     private fun updateNotification(title: String, text: String) {
+//        Log.i("HW_SCAN", "Notification update. Speed: $title, mode:$text. Context: $this")
         val notificationManager = NotificationManagerCompat.from(this)
+        if (ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.POST_NOTIFICATIONS
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            return
+        }
         notificationManager.notify(1, createNotification(title, text))
     }
 
     private fun collectUIState() {
-        GlobalScope.launch {
+        serviceScope.launch {
                 appViewModel?.uiState?.collect { uiState ->
-                     updateNotification("Speed: ${uiState.currentFanSpeed}","${uiState.currentFanMode}")
+                    updateNotification(
+                        getString(R.string.notification_header) + uiState.currentFanSpeed,
+                        getString(R.string.notification_text) + uiState.currentFanMode)
                 }
             }
     }
 
     enum class Actions {
-        START, STOP, UPDATE_NOTIFICATION
+        START, STOP
     }
 
 

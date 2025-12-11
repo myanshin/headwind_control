@@ -37,7 +37,7 @@ class BleManager: Service() {
     private var scanning = false
     private val scanPeriod: Long = 10000
 
-    val devicesFound = mutableListOf<BluetoothDevice>()
+    private val devicesFound = mutableListOf<BluetoothDevice>()
 
     // Set up a bound service
     private val binder = LocalBinder()

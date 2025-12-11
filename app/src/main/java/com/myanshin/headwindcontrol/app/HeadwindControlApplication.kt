@@ -67,21 +67,19 @@ class HeadwindControlApplication: Application() {
 
     override fun onCreate() {
         super.onCreate()
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                "running_channel",
-                "Running Notifications",
-                NotificationManager.IMPORTANCE_HIGH
-            ).apply {
-                enableLights(false)
-                enableVibration(false)
-                setSound(null, null)
-            }
-
-
-            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            notificationManager.createNotificationChannel(channel)
+        val channel = NotificationChannel(
+            "running_channel",
+            "Running Notifications",
+            NotificationManager.IMPORTANCE_HIGH
+        ).apply {
+            enableLights(false)
+            enableVibration(false)
+            setSound(null, null)
         }
+
+
+        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.createNotificationChannel(channel)
         appSettingsRepository = AppSettingsRepository(dataStore)
         bleManagerRepository = BleManagerRepository(this)
     }
