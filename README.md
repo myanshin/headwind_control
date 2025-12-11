@@ -24,5 +24,6 @@ No connection to Internet is used.
 
 ## Explanation of permissions requested in the app
 
-This app requires bluetooth and location permissions. Permissions may vary by Android version. You can find further information here:
+This app requires bluetooth, location and notification permissions. Permissions may vary by Android version. You can find further information here:
 https://developer.android.com/develop/connectivity/bluetooth/bt-permissions
+
