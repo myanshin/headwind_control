@@ -11,6 +11,11 @@ Features:
 - Auto save last connected fan's MAC address.
 - Set fan speed and mode.
 - Works in floating screen mode (PiP).
+- Persistent notification with controls in notification shade and on the lock screen.
+
+## Disable notificaton popup or lockscreen notification
+
+To disable notification popup or lock screen notification go to Android notification settings for Headwind Control app and uncheck corresponding setting at Notification Style window.
 
 ## Data collected by the app
 
@@ -20,10 +25,4 @@ No connection to Internet is used.
 ## Explanation of permissions requested in the app
 
 This app requires bluetooth and location permissions. Permissions may vary by Android version. You can find further information here:
-
-
 https://developer.android.com/develop/connectivity/bluetooth/bt-permissions
-
-## Coming soon
-
-Persistent notification with controls in notification shade and on the lock screen.
