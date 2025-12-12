@@ -1,5 +1,7 @@
 # Headwind Control
 
+## To download .apk click "Releases" on the right
+
 ## Getting started
 
 Welcome to the Wahoo Headwind Control app for Android!
@@ -26,4 +28,5 @@ No connection to Internet is used.
 
 This app requires bluetooth, location and notification permissions. Permissions may vary by Android version. You can find further information here:
 https://developer.android.com/develop/connectivity/bluetooth/bt-permissions
+
 
