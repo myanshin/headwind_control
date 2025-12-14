@@ -13,4 +13,5 @@
     <string name="ble_search">Search</string>
     <string name="notification_header">"Speed: "</string>
     <string name="notification_text" >"Mode: "</string>
+    <string name="slider_speed">"Speed: "</string>
 </resources>

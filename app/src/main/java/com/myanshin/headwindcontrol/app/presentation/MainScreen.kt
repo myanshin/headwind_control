@@ -2,6 +2,8 @@ package com.myanshin.headwindcontrol.app.presentation
 
 import android.annotation.SuppressLint
 import android.os.Build
+import android.util.Log
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -27,12 +29,15 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material.Slider
+import androidx.compose.material.SliderDefaults
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -40,6 +45,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ModifierLocalBeyondBoundsLayout
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -47,9 +53,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.myanshin.headwindcontrol.app.ConnectionStatus
 import com.myanshin.headwindcontrol.app.FanMode
 import com.myanshin.headwindcontrol.R
+import kotlin.math.roundToInt
 
 
 @SuppressLint("UnusedBoxWithConstraintsScope")
@@ -110,7 +118,8 @@ fun MainScreen(
                     }
 
                     if (appUiState.isBtAdapterEnabled) {
-                        DeviceConnected(appUiState.savedDeviceAddress,
+                        DeviceConnected(
+                            appUiState.savedDeviceAddress,
                             appUiState.connectedDeviceName,
                             modifier = Modifier.constrainAs(deviceConnected) {
                                 centerTo(parent)
@@ -218,6 +227,12 @@ fun MainScreen(
                 ) { fanSpeed -> appViewModel.setFanSpeed(fanSpeed) }
 
             }
+
+            SpeedSlider(
+                appUiState.waitForCharWrite,
+                appUiState.currentFanSpeed,
+                appUiState.connectionStatus
+            ) { fanSpeed -> appViewModel.setFanSpeed(fanSpeed) }
 
             Row(
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -372,6 +387,43 @@ fun SpeedButton(
 }
 
 @Composable
+fun SpeedSlider(
+    waitForCharWrite: Boolean,
+    currentFanSpeed: Byte,
+    connectionStatus: ConnectionStatus,
+    callback: (Byte) -> Unit
+) {
+    var sliderPosition by remember { mutableFloatStateOf( currentFanSpeed.toFloat()) }
+
+    Text(
+        text = stringResource(R.string.slider_speed) + sliderPosition.roundToInt().toString(),
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 17.sp,
+        color = if (!waitForCharWrite && connectionStatus == ConnectionStatus.ACTIVE) MaterialTheme.colorScheme.primary
+                else Color.Gray
+    )
+
+    Slider(
+        enabled = !waitForCharWrite && connectionStatus == ConnectionStatus.ACTIVE,
+        value = sliderPosition,
+        onValueChange = {
+            sliderPosition = it
+        },
+        onValueChangeFinished = {
+            val intValue = sliderPosition.roundToInt()
+            callback(intValue.toByte())
+        },
+        valueRange = 0f..100f,
+        colors = SliderDefaults.colors(
+            thumbColor = MaterialTheme.colorScheme.primary,
+            activeTrackColor = MaterialTheme.colorScheme.primary
+        )
+    )
+
+
+}
+
+@Composable
 fun SearchButton(
     modifier: Modifier = Modifier,
     connectionStatus: ConnectionStatus,
@@ -415,9 +467,12 @@ fun WindowButton(
     }
 }
 
+
+
 @Composable
 fun NotificationSwitch(isNotificationEnabled: Boolean, callback: (Boolean) -> Unit) {
-    var checked by remember { mutableStateOf(isNotificationEnabled) }
+    var checked by remember { mutableStateOf(false) }
+    checked = isNotificationEnabled
     Switch(
         checked = checked,
         onCheckedChange = {

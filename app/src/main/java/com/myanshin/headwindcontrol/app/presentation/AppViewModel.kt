@@ -9,6 +9,7 @@ import android.content.Context.RECEIVER_EXPORTED
 import android.content.Intent
 import android.content.IntentFilter
 import android.location.LocationManager
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
@@ -222,6 +223,7 @@ class AppViewModel(
         viewModelScope.launch {
             appSettingsRepository.appSettingsFlow.collect { appSettings ->
                 _uiState.update { currentState ->
+                    Log.i("HW_SCAN", appSettings.toString())
                     currentState.copy(
                         savedDeviceAddress = appSettings.savedDeviceAddress,
                         isNotificationEnabled = appSettings.isNotificationEnabled
