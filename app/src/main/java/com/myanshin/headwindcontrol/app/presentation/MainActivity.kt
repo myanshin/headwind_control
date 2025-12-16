@@ -28,6 +28,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.myanshin.headwindcontrol.R
+import com.myanshin.headwindcontrol.app.ConnectionStatus
 import com.myanshin.headwindcontrol.app.ServiceLocator
 import com.myanshin.headwindcontrol.app.presentation.theme.HeadwindControlTheme
 import kotlinx.coroutines.launch
@@ -37,6 +38,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var appViewModel: AppViewModel
 
     private var isNotificationEnabled: Boolean? = null
+    private var connectionStatus: ConnectionStatus? = null
     private var isPipModeEnabled = false
     private lateinit var pipParams: PictureInPictureParams
 
@@ -101,10 +103,15 @@ class MainActivity : ComponentActivity() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 appViewModel.uiState.collect { uiState ->
-                    if (isNotificationEnabled != uiState.isNotificationEnabled){
+                    if (
+                        isNotificationEnabled != uiState.isNotificationEnabled
+                        || connectionStatus != uiState.connectionStatus
+                        )
+                    {
                         isNotificationEnabled = uiState.isNotificationEnabled
-                        if (isNotificationEnabled == true) { startNotificationService() }
-                        else {stopNotificationService() }
+                        connectionStatus = uiState.connectionStatus
+                        if (isNotificationEnabled == true && connectionStatus == ConnectionStatus.ACTIVE) { startNotificationService() }
+                        else { stopNotificationService() }
                     }
                 }
             }

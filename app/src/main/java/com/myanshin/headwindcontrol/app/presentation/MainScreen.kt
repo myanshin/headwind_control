@@ -144,26 +144,39 @@ fun MainScreen(
             }
 
             Row(
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier
+                    .padding(top = 10.dp, bottom = 10.dp)
+                    .fillMaxWidth()
+            ) {
+                val speeds = listOf(5, 10, 15, 20, 25)
+                for (speed in speeds) {
+                    SpeedButton(
+                        waitForCharWrite, appUiState.currentFanSpeed, appUiState.currentFanMode,
+                        speed, appUiState.connectionStatus
+                    ) { fanSpeed -> appViewModel.setFanSpeed(fanSpeed) }
+                }
+            }
+
+            Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Row {
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        SpeedButton(
-                            waitForCharWrite, appUiState.currentFanSpeed, appUiState.currentFanMode,
-                            5, "5", appUiState.connectionStatus
-                        ) { fanSpeed -> appViewModel.setFanSpeed(fanSpeed) }
-                        SpeedButton(
-                            waitForCharWrite, appUiState.currentFanSpeed, appUiState.currentFanMode,
-                            10, "10", appUiState.connectionStatus
-                        ) { fanSpeed -> appViewModel.setFanSpeed(fanSpeed) }
-                        SpeedButton(
-                            waitForCharWrite, appUiState.currentFanSpeed, appUiState.currentFanMode,
-                            15, "15", appUiState.connectionStatus
-                        ) { fanSpeed -> appViewModel.setFanSpeed(fanSpeed) }
+                    Column {
+                        ModeButton(
+                            waitForCharWrite, appUiState.currentFanMode,
+                            FanMode.SPEED, "SPD", appUiState.connectionStatus
+                        ) { fanMode -> appViewModel.setFanMode(fanMode) }
+                        ModeButton(
+                            waitForCharWrite, appUiState.currentFanMode,
+                            FanMode.HR, "HR", appUiState.connectionStatus
+                        ) { fanMode -> appViewModel.setFanMode(fanMode) }
+                        ModeButton(
+                            waitForCharWrite, appUiState.currentFanMode,
+                            FanMode.OFF, "OFF", appUiState.connectionStatus
+                        ) { fanMode -> appViewModel.setFanMode(fanMode) }
                     }
                 }
 
@@ -182,50 +195,32 @@ fun MainScreen(
                         appViewModel.disconnectFromFan()
                     }
                 }
-
-                Column {
-                    ModeButton(
-                        waitForCharWrite, appUiState.currentFanMode,
-                        FanMode.SPEED, "SPD", appUiState.connectionStatus
-                    ) { fanMode -> appViewModel.setFanMode(fanMode) }
-                    ModeButton(
-                        waitForCharWrite, appUiState.currentFanMode,
-                        FanMode.HR, "HR", appUiState.connectionStatus
-                    ) { fanMode -> appViewModel.setFanMode(fanMode) }
-                    ModeButton(
-                        waitForCharWrite, appUiState.currentFanMode,
-                        FanMode.OFF, "OFF", appUiState.connectionStatus
-                    ) { fanMode -> appViewModel.setFanMode(fanMode) }
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    val speeds = listOf(30, 40, 50)
+                    for (speed in speeds) {
+                        SpeedButton(
+                            waitForCharWrite, appUiState.currentFanSpeed, appUiState.currentFanMode,
+                            speed, appUiState.connectionStatus
+                        ) { fanSpeed -> appViewModel.setFanSpeed(fanSpeed) }
+                    }
                 }
             }
+
             Row(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 modifier = Modifier
-                    .padding(top = 20.dp, bottom = 20.dp)
+                    .padding(top = 10.dp, bottom = 20.dp)
                     .fillMaxWidth()
             ) {
-
-                SpeedButton(
-                    waitForCharWrite, appUiState.currentFanSpeed, appUiState.currentFanMode,
-                    25, "25", appUiState.connectionStatus
-                ) { fanSpeed -> appViewModel.setFanSpeed(fanSpeed) }
-                SpeedButton(
-                    waitForCharWrite, appUiState.currentFanSpeed, appUiState.currentFanMode,
-                    35, "35", appUiState.connectionStatus
-                ) { fanSpeed -> appViewModel.setFanSpeed(fanSpeed) }
-                SpeedButton(
-                    waitForCharWrite, appUiState.currentFanSpeed, appUiState.currentFanMode,
-                    50, "50", appUiState.connectionStatus
-                ) { fanSpeed -> appViewModel.setFanSpeed(fanSpeed) }
-                SpeedButton(
-                    waitForCharWrite, appUiState.currentFanSpeed, appUiState.currentFanMode,
-                    75, "75", appUiState.connectionStatus
-                ) { fanSpeed -> appViewModel.setFanSpeed(fanSpeed) }
-                SpeedButton(
-                    waitForCharWrite, appUiState.currentFanSpeed, appUiState.currentFanMode,
-                    100, "100", appUiState.connectionStatus
-                ) { fanSpeed -> appViewModel.setFanSpeed(fanSpeed) }
-
+                val speeds = listOf(100, 90, 80, 70, 60)
+                for (speed in speeds) {
+                    SpeedButton(
+                        waitForCharWrite, appUiState.currentFanSpeed, appUiState.currentFanMode,
+                        speed, appUiState.connectionStatus
+                    ) { fanSpeed -> appViewModel.setFanSpeed(fanSpeed) }
+                }
             }
 
             SpeedSlider(
@@ -291,7 +286,7 @@ fun MainScreen(
                 waitForCharWrite, appUiState.currentFanMode,
                 FanMode.MANUAL, "MAN", appUiState.connectionStatus, Modifier.width(80.dp)
             ) { }
-            SmallIndicator(appUiState.currentFanSpeed)
+            SmallIndicator(appUiState.connectionStatus, appUiState.currentFanSpeed)
             ModeButton(
                 waitForCharWrite, appUiState.currentFanMode,
                 FanMode.HR, "HR", appUiState.connectionStatus, Modifier.width(80.dp)
@@ -311,7 +306,7 @@ fun DeviceConnected(
         fontSize = if (connectedDeviceName != "") 20.sp else 18.sp,
         lineHeight = 20.sp,
         modifier = modifier,
-        color = if (connectedDeviceName == "") Color.Gray else MaterialTheme.colorScheme.primary,
+        color = if (connectedDeviceName == "") MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f) else MaterialTheme.colorScheme.primary,
         fontWeight = if (connectedDeviceName == "") FontWeight.Normal else FontWeight.Bold,
         )
 }
@@ -354,13 +349,12 @@ fun ModeButton(
 @Composable
 fun SpeedButton(
     waitForCharWrite: Boolean,
-    currentFanSpeed: Byte,
+    currentFanSpeed: Int,
     currentFanMode: FanMode,
-    onClickFanSpeed: Byte,
-    buttonText: String,
+    onClickFanSpeed: Int,
     connectionStatus: ConnectionStatus,
     modifier: Modifier = Modifier,
-    callback: (Byte) -> Unit
+    callback: (Int) -> Unit
 ) {
     TextButton(
         onClick = {
@@ -378,7 +372,7 @@ fun SpeedButton(
         Text(
             fontWeight = if (currentFanSpeed == onClickFanSpeed && currentFanMode == FanMode.MANUAL)
                 FontWeight.ExtraBold else FontWeight.SemiBold,
-            text = buttonText,
+            text = onClickFanSpeed.toString(),
             fontSize = if (currentFanSpeed == onClickFanSpeed && currentFanMode == FanMode.MANUAL)
                 19.sp else 17.sp
         )
@@ -389,18 +383,23 @@ fun SpeedButton(
 @Composable
 fun SpeedSlider(
     waitForCharWrite: Boolean,
-    currentFanSpeed: Byte,
+    currentFanSpeed: Int,
     connectionStatus: ConnectionStatus,
-    callback: (Byte) -> Unit
+    callback: (Int) -> Unit
 ) {
     var sliderPosition by remember { mutableFloatStateOf( currentFanSpeed.toFloat()) }
+    var fanSpeed by remember { mutableStateOf(currentFanSpeed)}
+    if (fanSpeed != currentFanSpeed) {
+        sliderPosition = currentFanSpeed.toFloat()
+        fanSpeed = currentFanSpeed
+    }
 
     Text(
         text = stringResource(R.string.slider_speed) + sliderPosition.roundToInt().toString(),
         fontWeight = FontWeight.SemiBold,
         fontSize = 17.sp,
         color = if (!waitForCharWrite && connectionStatus == ConnectionStatus.ACTIVE) MaterialTheme.colorScheme.primary
-                else Color.Gray
+                else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
     )
 
     Slider(
@@ -411,12 +410,14 @@ fun SpeedSlider(
         },
         onValueChangeFinished = {
             val intValue = sliderPosition.roundToInt()
-            callback(intValue.toByte())
+            callback(intValue)
         },
         valueRange = 0f..100f,
         colors = SliderDefaults.colors(
             thumbColor = MaterialTheme.colorScheme.primary,
-            activeTrackColor = MaterialTheme.colorScheme.primary
+            activeTrackColor = MaterialTheme.colorScheme.primary,
+            disabledInactiveTrackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
+            inactiveTickColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
         )
     )
 
@@ -462,12 +463,9 @@ fun WindowButton(
         Icon(
             painterResource(R.drawable.close_fullscreen_24px),
             "To window mode",
-//            modifier = Modifier.size(20.dp)
         )
     }
 }
-
-
 
 @Composable
 fun NotificationSwitch(isNotificationEnabled: Boolean, callback: (Boolean) -> Unit) {
@@ -485,7 +483,7 @@ fun NotificationSwitch(isNotificationEnabled: Boolean, callback: (Boolean) -> Un
 @Composable
 fun IndeterminateCircularIndicator(
     connectionStatus: ConnectionStatus,
-    currentFanSpeed: Byte,
+    currentFanSpeed: Int,
     isBtAdapterEnabled: Boolean,
     savedDeviceAddress: String,
     callback: () -> Unit) {
@@ -550,12 +548,10 @@ fun IndeterminateCircularIndicator(
 }
 
 @Composable
-fun SmallIndicator(currentFanSpeed: Byte) {
+fun SmallIndicator(connectionStatus: ConnectionStatus, currentFanSpeed: Int) {
     Text(
-//        modifier = Modifier.padding(horizontal = 10.dp),
         text = currentFanSpeed.toString(),
-//        textAlign = TextAlign.Center,
-        color = MaterialTheme.colorScheme.primary,
+        color = if (connectionStatus == ConnectionStatus.ACTIVE) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
         fontSize = 40.sp,
     )
 }

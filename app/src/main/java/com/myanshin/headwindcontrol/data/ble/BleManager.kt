@@ -52,7 +52,7 @@ class BleManager: Service() {
         }
     }
 
-    // Broadcast updates to ViewModel
+     // Broadcast updates to ViewModel
     private fun broadcastUpdate(action: String, extraData: Any? = null) {
         val intent = Intent(action)
 

@@ -65,7 +65,7 @@ class NotificationService : Service() {
             .setContentText(text)
             .setStyle(androidx.media.app.NotificationCompat.MediaStyle()
                 .setShowActionsInCompactView(0, 1, 2))
-            .setSmallIcon(R.drawable.ecg_heart_24dp)
+            .setSmallIcon(R.drawable.mode_fan_24px)
             .setOngoing(true)
             .setDefaults(0)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
@@ -110,7 +110,6 @@ class NotificationService : Service() {
     }
 
     private fun updateNotification(title: String, text: String) {
-//        Log.i("HW_SCAN", "Notification update. Speed: $title, mode:$text. Context: $this")
         val notificationManager = NotificationManagerCompat.from(this)
         if (ActivityCompat.checkSelfPermission(
                 this,

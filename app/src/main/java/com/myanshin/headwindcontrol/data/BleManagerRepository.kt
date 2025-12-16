@@ -30,17 +30,15 @@ class BleManagerRepository (private val context: Context){
                     Log.e(tag, "Unable to initialize Bluetooth")
                 }
             }
-            Log.i(tag, "BLE service started $bluetoothService")
         }
-
         override fun onServiceDisconnected(className: ComponentName) {
             bluetoothService = null
         }
     }
 
     private fun createBleService() {
-        val gattServiceIntent = Intent(context, BleManager::class.java)
-        context.bindService(gattServiceIntent, serviceConnection, BIND_AUTO_CREATE)
+        val bleServiceIntent = Intent(context, BleManager::class.java)
+        context.bindService(bleServiceIntent, serviceConnection, BIND_AUTO_CREATE)
     }
 
     init {
@@ -64,7 +62,7 @@ class BleManagerRepository (private val context: Context){
         bluetoothService?.writeToCharacteristic(byteArrayOf(CommandType.MODE.code, mode, 0, 0))
     }
 
-    fun setFanSpeed (speed: Byte) {
-       bluetoothService?.writeToCharacteristic(byteArrayOf(CommandType.SPEED.code, speed, 0, 0))
+    fun setFanSpeed (speed: Int) {
+       bluetoothService?.writeToCharacteristic(byteArrayOf(CommandType.SPEED.code, speed.toByte(), 0, 0))
     }
 }
