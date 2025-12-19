@@ -13,4 +13,5 @@
     <string name="ble_search">Поиск</string>
     <string name="notification_header">"Скорость: "</string>
     <string name="notification_text" >"Режим: "</string>
+    <string name="slider_speed">"Скорость: "</string>
 </resources>

@@ -9,6 +9,7 @@ import android.content.Context.RECEIVER_EXPORTED
 import android.content.Intent
 import android.content.IntentFilter
 import android.location.LocationManager
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
@@ -76,7 +77,7 @@ class AppViewModel(
                         return
                     val messType = MessType.find(intent.getByteArrayExtra("EXTRA_DATA")!![0])
                     if (messType == MessType.UPD) {
-                        val newCurrentFanSpeed = intent.getByteArrayExtra("EXTRA_DATA")!![2]
+                        val newCurrentFanSpeed = intent.getByteArrayExtra("EXTRA_DATA")!![2].toInt()
                         val newCurrentFanMode = FanMode.find(intent.getByteArrayExtra("EXTRA_DATA")!![3])
                         if ((newCurrentFanSpeed != _uiState.value.currentFanSpeed
                             || newCurrentFanMode != _uiState.value.currentFanMode)
@@ -100,7 +101,7 @@ class AppViewModel(
                                 )
                             }
 
-                            if (newCurrentFanMode == FanMode.MANUAL && _uiState.value.requestedFanSpeed != (-1).toByte()) {
+                            if (newCurrentFanMode == FanMode.MANUAL && _uiState.value.requestedFanSpeed != -1) {
                                 val requestedFanSpeed = _uiState.value.requestedFanSpeed
                                 _uiState.update { currentState ->
                                     currentState.copy(
@@ -113,7 +114,7 @@ class AppViewModel(
                         }
                         else if (commandType == CommandType.SPEED) {
                             val newCurrentFanSpeed =
-                                intent.getByteArrayExtra("EXTRA_DATA")!![3]
+                                intent.getByteArrayExtra("EXTRA_DATA")!![3].toInt()
                             _uiState.update { currentState ->
                                 currentState.copy(
                                     currentFanSpeed = newCurrentFanSpeed,
@@ -192,17 +193,17 @@ class AppViewModel(
                         }
                         MainActivity.FAN_CONTROL_TYPE_SPEED_DECREASE -> {
                             when  {
-                                uiState.value.currentFanSpeed > 15 -> setFanSpeed((uiState.value.currentFanSpeed - 10).toByte())
-                                uiState.value.currentFanSpeed > 9  -> setFanSpeed((uiState.value.currentFanSpeed - 5).toByte())
-                                uiState.value.currentFanSpeed > 6  -> setFanSpeed(4.toByte())
-                                else -> setFanSpeed(0.toByte())
+                                uiState.value.currentFanSpeed > 15 -> setFanSpeed((uiState.value.currentFanSpeed - 10))
+                                uiState.value.currentFanSpeed > 9  -> setFanSpeed((uiState.value.currentFanSpeed - 5))
+                                uiState.value.currentFanSpeed > 6  -> setFanSpeed(4)
+                                else -> setFanSpeed(0)
                             }
                         }
                         MainActivity.FAN_CONTROL_TYPE_SPEED_INCREASE -> {
                             if (uiState.value.currentFanSpeed < 10)
-                                setFanSpeed((uiState.value.currentFanSpeed + 5).toByte())
+                                setFanSpeed((uiState.value.currentFanSpeed + 5))
                             else if (uiState.value.currentFanSpeed <= 90)
-                                setFanSpeed((uiState.value.currentFanSpeed + 10).toByte())
+                                setFanSpeed((uiState.value.currentFanSpeed + 10))
                         }
                     }
                 }
@@ -265,7 +266,7 @@ class AppViewModel(
         return bleManagerRepository.setFanMode(mode.code)
     }
 
-    fun setFanSpeed (speed: Byte) {
+    fun setFanSpeed (speed: Int) {
         if (_uiState.value.currentFanMode == FanMode.MANUAL) {
             return bleManagerRepository.setFanSpeed(speed)
         } else {
