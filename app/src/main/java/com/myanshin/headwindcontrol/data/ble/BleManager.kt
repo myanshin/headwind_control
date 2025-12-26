@@ -206,7 +206,7 @@ class BleManager: Service() {
         if (characteristic != null) {
             bluetoothGatt?.readCharacteristic(characteristic)
         } else {
-            println("Characteristic not found")
+            Log.e(tag,"Characteristic not found $characteristic")
         }
     }
 
@@ -220,7 +220,7 @@ class BleManager: Service() {
             bluetoothGatt?.writeCharacteristic(characteristic)
             Log.e(tag, "Char write ${valueToWrite.toList()}")
         } else {
-            Log.e(tag, "Characteristic not found!")
+            Log.e(tag, "Characteristic not found ${valueToWrite.toList()}!")
         }
     }
 

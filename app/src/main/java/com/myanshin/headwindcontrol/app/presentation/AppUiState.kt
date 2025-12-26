@@ -11,7 +11,6 @@ data class AppUiState(
     val currentFanSpeed: Int = 0,
     val requestedFanSpeed: Int = -1,
     val currentFanMode: FanMode = FanMode.OFF,
-    val isDeviceConnected: Boolean = false,
     val connectionStatus: ConnectionStatus = ConnectionStatus.INACTIVE,
     val waitForCharWrite: Boolean = false,
     val devicesFound: List<Array<String>> = listOf()

@@ -9,7 +9,6 @@ import android.content.Context.RECEIVER_EXPORTED
 import android.content.Intent
 import android.content.IntentFilter
 import android.location.LocationManager
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
@@ -24,6 +23,8 @@ import com.myanshin.headwindcontrol.app.MessType
 import com.myanshin.headwindcontrol.data.ble.BleManager
 import com.myanshin.headwindcontrol.data.AppSettingsRepository
 import com.myanshin.headwindcontrol.data.BleManagerRepository
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -36,12 +37,25 @@ class AppViewModel(
     private val appSettingsRepository: AppSettingsRepository,
     private val bleManagerRepository: BleManagerRepository
 ) : ViewModel() {
-
     private val context: Context = application.applicationContext
-
     private val _uiState = MutableStateFlow(AppUiState())
-
     val uiState: StateFlow<AppUiState> = _uiState.asStateFlow()
+    private var resetWaitForCharWrite: Job? = null
+    private fun startResetJob() {
+        resetWaitForCharWrite = viewModelScope.launch {
+            delay(3000)
+            if (_uiState.value.waitForCharWrite) {
+                _uiState.update { currentState ->
+                    currentState.copy(
+                        waitForCharWrite = false
+                    )
+                }
+            }
+        }
+    }
+    private fun stopResetJob() {
+        resetWaitForCharWrite?.cancel()
+     }
 
     // Action on receiving broadcast messages from BleManager
     private val gattUpdateReceiver: BroadcastReceiver = object : BroadcastReceiver() {
@@ -57,15 +71,14 @@ class AppViewModel(
                 BleManager.ACTION_GATT_CONNECTED -> {
                     _uiState.update { currentState ->
                         currentState.copy(
-                            isDeviceConnected = true,
                             connectionStatus = ConnectionStatus.ACTIVE,
+                            waitForCharWrite = false
                         )
                     }
                 }
                 BleManager.ACTION_GATT_DISCONNECTED -> {
                     _uiState.update { currentState ->
                         currentState.copy(
-                            isDeviceConnected = false,
                             connectionStatus = ConnectionStatus.INACTIVE,
                             connectedDeviceName = "",
                             currentFanSpeed = 0
@@ -90,6 +103,7 @@ class AppViewModel(
                             }
                         }
                     } else if (messType == MessType.WR) {
+                        stopResetJob()
                         val commandType = CommandType.find(intent.getByteArrayExtra("EXTRA_DATA")!![1])
                         if (commandType == CommandType.MODE) {
                             val newCurrentFanMode =
@@ -100,7 +114,6 @@ class AppViewModel(
                                     waitForCharWrite = false
                                 )
                             }
-
                             if (newCurrentFanMode == FanMode.MANUAL && _uiState.value.requestedFanSpeed != -1) {
                                 val requestedFanSpeed = _uiState.value.requestedFanSpeed
                                 _uiState.update { currentState ->
@@ -122,7 +135,6 @@ class AppViewModel(
                                 )
                             }
                         }
-
                     }
                 }
                 BleManager.ACTION_DEVICE_NAME_READ -> {
@@ -133,6 +145,7 @@ class AppViewModel(
                     }
                 }
                 BleManager.ACTION_GATT_CHAR_WRITE_BEGIN -> {
+                    startResetJob()
                     _uiState.update { currentState ->
                         currentState.copy(
                             waitForCharWrite = true
@@ -149,7 +162,6 @@ class AppViewModel(
                                     devicesFound = devicesFound
                                 )
                             }
-
                         }
                     }
                 }
@@ -259,23 +271,26 @@ class AppViewModel(
     }
 
     fun disconnectFromFan() {
-        return bleManagerRepository.disconnectFromFan()
+        if (_uiState.value.currentFanSpeed > 0 && _uiState.value.currentFanMode == FanMode.MANUAL) {
+            bleManagerRepository.setFanSpeed(0)
+        }
+        bleManagerRepository.disconnectFromFan()
     }
 
     fun setFanMode(mode: FanMode) {
-        return bleManagerRepository.setFanMode(mode.code)
+        bleManagerRepository.setFanMode(mode.code)
     }
 
     fun setFanSpeed (speed: Int) {
         if (_uiState.value.currentFanMode == FanMode.MANUAL) {
-            return bleManagerRepository.setFanSpeed(speed)
+            bleManagerRepository.setFanSpeed(speed)
         } else {
             _uiState.update { currentState ->
                 currentState.copy(
                     requestedFanSpeed = speed
                 )
             }
-            return setFanMode(FanMode.MANUAL)
+            setFanMode(FanMode.MANUAL)
         }
     }
 

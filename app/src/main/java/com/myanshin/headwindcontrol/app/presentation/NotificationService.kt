@@ -139,7 +139,7 @@ class NotificationService : Service() {
                 appViewModel?.uiState?.collect { uiState ->
                     updateNotification(
                         getString(R.string.notification_header) + uiState.currentFanSpeed,
-                        getString(R.string.notification_text) + uiState.currentFanMode)
+                        getString(R.string.notification_text) + getString(uiState.currentFanMode.notificationTextResId))
                 }
             }
     }

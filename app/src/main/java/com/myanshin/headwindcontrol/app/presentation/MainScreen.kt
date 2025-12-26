@@ -2,7 +2,6 @@ package com.myanshin.headwindcontrol.app.presentation
 
 import android.annotation.SuppressLint
 import android.os.Build
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -68,7 +67,6 @@ fun MainScreen(
 ) {
     val appUiState by appViewModel.uiState.collectAsState()
     val scrollState = rememberScrollState()
-    val waitForCharWrite = false
 
     if (!isPipModeEnabled) {
         Column (
@@ -204,24 +202,15 @@ fun MainScreen(
                 ) {
                     Row {
                         Column {
-                            ModeButton(
+                            val modes = listOf(FanMode.SPEED, FanMode.HR, FanMode.OFF)
+                            for (mode in modes) {
+                               ModeButton(
                                 appUiState,
-                                FanMode.SPEED,
-                                "SPD",
-                            ) { fanMode -> appViewModel.setFanMode(fanMode) }
-                            ModeButton(
-                                appUiState,
-                                FanMode.HR,
-                                "HR",
-                            ) { fanMode -> appViewModel.setFanMode(fanMode) }
-                            ModeButton(
-                                appUiState,
-                                FanMode.OFF,
-                                "OFF",
-                            ) { fanMode -> appViewModel.setFanMode(fanMode) }
+                                mode,
+                                ) { fanMode -> appViewModel.setFanMode(fanMode) }
+                            }
                         }
                     }
-
                     IndeterminateCircularIndicator(appUiState) {
                         if (
                             appUiState.connectionStatus == ConnectionStatus.INACTIVE
@@ -264,27 +253,7 @@ fun MainScreen(
             }
         }
     } else {
-        Row(
-            horizontalArrangement = Arrangement.SpaceAround,
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .fillMaxHeight()
-                .fillMaxWidth()
-        ) {
-            ModeButton(
-                appUiState,
-                FanMode.MANUAL,
-                "MAN",
-                Modifier.width(80.dp)
-            ) { }
-            SmallIndicator(appUiState)
-            ModeButton(
-                appUiState,
-                FanMode.HR,
-                "HR",
-                Modifier.width(80.dp)
-            ) { }
-        }
+        PipWindow(appUiState)
     }
 }
 
@@ -307,7 +276,6 @@ fun DeviceConnected(
 fun ModeButton(
     s: AppUiState,
     onClickFanMode: FanMode,
-    buttonText: String,
     modifier: Modifier = Modifier,
     callback: (FanMode) -> Unit
 ) {
@@ -315,7 +283,7 @@ fun ModeButton(
         onClick = {
             callback(onClickFanMode)
         },
-        enabled = !s.waitForCharWrite && s.connectionStatus == ConnectionStatus.ACTIVE,
+        enabled = isButtonEnabled(s),
         modifier = modifier.width(60.dp),
         colors = ButtonDefaults.textButtonColors(
             contentColor = if (s.currentFanMode == onClickFanMode) MaterialTheme.colorScheme.primary
@@ -324,7 +292,7 @@ fun ModeButton(
     )
     {
         Text(
-            text = buttonText,
+            text = onClickFanMode.uiText,
             fontWeight = if (s.currentFanMode == onClickFanMode && s.connectionStatus == ConnectionStatus.ACTIVE)
                 FontWeight.ExtraBold else FontWeight.SemiBold,
             fontSize = if (s.currentFanMode == onClickFanMode && s.connectionStatus == ConnectionStatus.ACTIVE)
@@ -345,7 +313,7 @@ fun SpeedButton(
         onClick = {
             callback(onClickFanSpeed)
         },
-        enabled = !s.waitForCharWrite && s.connectionStatus == ConnectionStatus.ACTIVE,
+        enabled = isButtonEnabled(s),
         modifier = modifier.width(60.dp),
         colors = ButtonDefaults.textButtonColors(
             contentColor = if (s.currentFanSpeed == onClickFanSpeed && s.currentFanMode == FanMode.MANUAL) MaterialTheme.colorScheme.primary
@@ -393,11 +361,11 @@ fun SpeedSlider(
             text = stringResource(R.string.slider_speed) + sliderPosition.roundToInt().toString(),
             fontWeight = FontWeight.SemiBold,
             fontSize = 17.sp,
-            color = if (!s.waitForCharWrite && s.connectionStatus == ConnectionStatus.ACTIVE) MaterialTheme.colorScheme.secondary
+            color = if (isButtonEnabled(s)) MaterialTheme.colorScheme.secondary
             else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
         )
         Slider(
-            enabled = !s.waitForCharWrite && s.connectionStatus == ConnectionStatus.ACTIVE,
+            enabled = isButtonEnabled(s),
             value = sliderPosition,
             onValueChange = {
                 sliderPosition = it
@@ -535,15 +503,6 @@ fun IndeterminateCircularIndicator(
     }
 }
 
-@Composable
-fun SmallIndicator(s: AppUiState) {
-    Text(
-        text = s.currentFanSpeed.toString(),
-        color = if (s.connectionStatus == ConnectionStatus.ACTIVE) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
-        fontSize = 40.sp,
-    )
-}
-
 @SuppressLint("MissingPermission")
 @Composable
 fun DevicesList(
@@ -604,4 +563,32 @@ fun DevicesList(
             HorizontalDivider()
         }
     }
+}
+
+@Composable
+fun PipWindow(appUiState: AppUiState) {
+    Row(
+        horizontalArrangement = Arrangement.SpaceEvenly,
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxHeight()
+            .fillMaxWidth()
+    ) {
+        Text(
+            text = appUiState.currentFanMode.uiText,
+            color = if (appUiState.connectionStatus == ConnectionStatus.ACTIVE) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+            fontSize = 17.sp,
+            fontWeight = FontWeight.Bold
+        )
+        Text(
+            text = appUiState.currentFanSpeed.toString(),
+            color = if (appUiState.connectionStatus == ConnectionStatus.ACTIVE) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+            fontSize = 40.sp,
+            modifier = Modifier.padding(end = 30.dp)
+        )
+    }
+}
+
+fun isButtonEnabled(s: AppUiState): Boolean {
+    return !s.waitForCharWrite && s.connectionStatus == ConnectionStatus.ACTIVE && s.connectedDeviceName != ""
 }
