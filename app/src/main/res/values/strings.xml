@@ -14,4 +14,8 @@
     <string name="notification_header">"Speed: "</string>
     <string name="notification_text" >"Mode: "</string>
     <string name="slider_speed">"Speed: "</string>
+    <string name="notif_mode_off">Off</string>
+    <string name="notif_mode_heart_rate">Heart Rate</string>
+    <string name="notif_mode_speed">Speed</string>
+    <string name="notif_mode_man">Man</string>
 </resources>

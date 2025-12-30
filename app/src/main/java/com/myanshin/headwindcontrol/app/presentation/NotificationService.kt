@@ -60,6 +60,18 @@ class NotificationService : Service() {
     }
 
     private fun createNotification(title: String, text: String): Notification {
+        val notificationIntent = Intent(this, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or
+                    Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                    Intent.FLAG_ACTIVITY_SINGLE_TOP
+        }
+        val contentIntent = PendingIntent.getActivity(
+            this,
+            0,
+            notificationIntent,
+            PendingIntent.FLAG_IMMUTABLE
+        )
+
         return NotificationCompat.Builder(this, "running_channel")
             .setContentTitle(title)
             .setContentText(text)
@@ -70,6 +82,7 @@ class NotificationService : Service() {
             .setDefaults(0)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setPriority(NotificationCompat.PRIORITY_MAX)
+            .setContentIntent(contentIntent)
             .addAction(
                 R.drawable.speed_decrease_24dp,
                 "Speed Decrease",
@@ -126,7 +139,7 @@ class NotificationService : Service() {
                 appViewModel?.uiState?.collect { uiState ->
                     updateNotification(
                         getString(R.string.notification_header) + uiState.currentFanSpeed,
-                        getString(R.string.notification_text) + uiState.currentFanMode)
+                        getString(R.string.notification_text) + getString(uiState.currentFanMode.notificationTextResId))
                 }
             }
     }

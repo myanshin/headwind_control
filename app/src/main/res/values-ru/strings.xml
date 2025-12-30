@@ -14,4 +14,8 @@
     <string name="notification_header">"Скорость: "</string>
     <string name="notification_text" >"Режим: "</string>
     <string name="slider_speed">"Скорость: "</string>
+    <string name="notif_mode_speed">Скорость</string>
+    <string name="notif_mode_man">Ручной</string>
+    <string name="notif_mode_off">Выключен</string>
+    <string name="notif_mode_heart_rate">Пульс</string>
 </resources>

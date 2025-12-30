@@ -4,7 +4,7 @@ import android.app.Application
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
-import android.util.Log
+import com.myanshin.headwindcontrol.R
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
@@ -16,11 +16,11 @@ private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(
     name = APP_SETTINGS_NAME
 )
 
-enum class FanMode(val code: Byte) {
-    OFF(1),
-    HR(2),
-    SPEED(3),
-    MANUAL(4);
+enum class FanMode(val code: Byte, val uiText: String, val notificationTextResId: Int) {
+    OFF(1, "OFF", R.string.notif_mode_off),
+    HR(2, "HR", R.string.notif_mode_heart_rate),
+    SPEED(3, "SPD", R.string.notif_mode_speed),
+    MANUAL(4, "MAN", R.string.notif_mode_man);
 //    SLEEP(5);
 
     companion object {
