@@ -29,7 +29,9 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+//noinspection UsingMaterialAndMaterial3Libraries
 import androidx.compose.material.Slider
+//noinspection UsingMaterialAndMaterial3Libraries
 import androidx.compose.material.SliderDefaults
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -38,6 +40,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -63,184 +66,71 @@ import kotlin.math.roundToInt
 fun MainScreen(
     appViewModel: AppViewModel,
     isPipModeEnabled: Boolean,
-    callback: () -> Unit
+    enterPiP: () -> Unit
 ) {
     val appUiState by appViewModel.uiState.collectAsState()
+
+    if (isPipModeEnabled) {
+        PipWindow(appUiState)
+        return
+    }
+
     val scrollState = rememberScrollState()
 
-    if (!isPipModeEnabled) {
-        Column (
-            modifier =  Modifier.padding(start = 20.dp, end = 20.dp)
-        ) {
+    Column(
+        modifier = Modifier.padding(start = 20.dp, end = 20.dp)
+    ) {
+        Header(appUiState, enterPiP)
+        Column(
+            modifier = Modifier.verticalScroll(scrollState),
+            horizontalAlignment = Alignment.CenterHorizontally
+        )
+        {
+            NotificationSearchPanel(appViewModel, appUiState)
             Row(
+                horizontalArrangement = Arrangement.SpaceBetween,
                 modifier = Modifier
+                    .padding(bottom = 10.dp)
                     .fillMaxWidth()
-                    .padding(top = 5.dp)
             ) {
-                ConstraintLayout(
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    val (logo, deviceConnected, scanButton) = createRefs()
-
-                    Column(
-                        modifier = Modifier.constrainAs(logo) {
-                            start.linkTo(parent.start)
-                            centerVerticallyTo(parent)
-                        }
-                    ) {
-                        Row {
-                            Text(
-                                text = "Headwind",
-                                fontSize = 12.sp,
-                                lineHeight = 13.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                        }
-                        Row {
-                            Text(
-                                text = "Control",
-                                fontSize = 12.sp,
-                                lineHeight = 13.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                        }
-                    }
-                    if (appUiState.isBtAdapterEnabled) {
-                        DeviceConnected(
-                            appUiState,
-                            modifier = Modifier.constrainAs(deviceConnected) {
-                                centerTo(parent)
-                            })
-                    } else {
-                        Text(
-                            text = stringResource(R.string.bluetooth_disabled),
-                            fontSize = 18.sp,
-                            color = Color.Red,
-                            modifier = Modifier.constrainAs(deviceConnected) {
-                                centerTo(parent)
-                            }
-                        )
-                    }
-                    WindowButton(
-                        Modifier.constrainAs(scanButton) {
-                            end.linkTo(parent.end)
-                        },
-                    ) { callback() }
+                val speeds = listOf(5, 10, 15, 20, 25)
+                for (speed in speeds) {
+                    SpeedButton(
+                        appUiState,
+                        speed,
+                    ) { fanSpeed -> appViewModel.setFanSpeed(fanSpeed) }
                 }
             }
-
-            Column(
-                modifier = Modifier.verticalScroll(scrollState),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            )
-            {
-                Row(
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    modifier = Modifier
-
-                        .fillMaxWidth()
-                        .padding(top = 20.dp, bottom = 20.dp)
-                        .border(
-                            width = 1.dp,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
-                            shape = RoundedCornerShape(16.dp))
-                        .background(
-                            color = Color.White,
-                            shape = RoundedCornerShape(16.dp))
-                        .padding(10.dp)
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        NotificationSwitch(appUiState.isNotificationEnabled == true) { enabled ->
-                            appViewModel.toggleNotificationEnabled(enabled)
-                        }
-                        Text(
-                            modifier = Modifier.padding(start = 5.dp),
-                            text = stringResource(R.string.notifications),
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 14.sp,
-                            color = MaterialTheme.colorScheme.secondary
-                        )
-                    }
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        SearchButton(appUiState) { appViewModel.scanBleDevices() }
-                        Text(
-                            modifier = Modifier.padding(start = 5.dp, end = 10.dp),
-                            text = stringResource(R.string.ble_search),
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 14.sp,
-                            color = MaterialTheme.colorScheme.secondary
-                        )
-                    }
-                }
-
-                // Display upper row only in fullscreen
-                Row(
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    modifier = Modifier
-                        .padding(bottom = 10.dp)
-                        .fillMaxWidth()
-                ) {
-                    val speeds = listOf(5, 10, 15, 20, 25)
-                    for (speed in speeds) {
-                        SpeedButton(
-                            appUiState,
-                            speed,
-                        ) { fanSpeed -> appViewModel.setFanSpeed(fanSpeed) }
-                    }
-                }
-
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Row {
-                        Column {
-                            val modes = listOf(FanMode.SPEED, FanMode.HR, FanMode.OFF)
-                            for (mode in modes) {
-                               ModeButton(
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row {
+                    Column {
+                        val modes = listOf(FanMode.SPEED, FanMode.HR, FanMode.OFF)
+                        for (mode in modes) {
+                            ModeButton(
                                 appUiState,
                                 mode,
-                                ) { fanMode -> appViewModel.setFanMode(fanMode) }
-                            }
-                        }
-                    }
-                    IndeterminateCircularIndicator(appUiState) {
-                        if (
-                            appUiState.connectionStatus == ConnectionStatus.INACTIVE
-                            && appUiState.savedDeviceAddress != ""
-                        ) {
-                            appViewModel.connectToFan(appUiState.savedDeviceAddress)
-                        } else {
-                            appViewModel.disconnectFromFan()
-                        }
-                    }
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        val speeds = listOf(30, 40, 50)
-                        for (speed in speeds) {
-                            SpeedButton(
-                                appUiState,
-                                 speed,
-                            ) { fanSpeed -> appViewModel.setFanSpeed(fanSpeed) }
+                            ) { fanMode -> appViewModel.setFanMode(fanMode) }
                         }
                     }
                 }
-
-                Row(
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    modifier = Modifier
-                        .padding(top = 10.dp, bottom = 20.dp)
-                        .fillMaxWidth()
+                IndeterminateCircularIndicator(appUiState) {
+                    if (
+                        appUiState.connectionStatus == ConnectionStatus.INACTIVE
+                        && appUiState.savedDeviceAddress != ""
+                    ) {
+                        appViewModel.connectToFan(appUiState.savedDeviceAddress)
+                    } else {
+                        appViewModel.disconnectFromFan()
+                    }
+                }
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    val speeds = listOf(100, 90, 80, 70, 60)
+                    val speeds = listOf(30, 40, 50)
                     for (speed in speeds) {
                         SpeedButton(
                             appUiState,
@@ -248,12 +138,132 @@ fun MainScreen(
                         ) { fanSpeed -> appViewModel.setFanSpeed(fanSpeed) }
                     }
                 }
-                SpeedSlider(appUiState) { fanSpeed -> appViewModel.setFanSpeed(fanSpeed) }
-                DevicesList(appUiState) { deviceAddress -> appViewModel.connectToFan(deviceAddress) }
             }
+            Row(
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier
+                    .padding(top = 10.dp, bottom = 20.dp)
+                    .fillMaxWidth()
+            ) {
+                val speeds = listOf(100, 90, 80, 70, 60)
+                for (speed in speeds) {
+                    SpeedButton(
+                        appUiState,
+                        speed,
+                    ) { fanSpeed -> appViewModel.setFanSpeed(fanSpeed) }
+                }
+            }
+            SpeedSlider(appUiState) { fanSpeed -> appViewModel.setFanSpeed(fanSpeed) }
+            DevicesList(appUiState) { deviceAddress -> appViewModel.connectToFan(deviceAddress) }
         }
-    } else {
-        PipWindow(appUiState)
+    }
+
+}
+
+@Composable
+fun Header(appUiState: AppUiState, enterPiP: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 5.dp)
+    ) {
+        ConstraintLayout(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            val (logo, deviceConnected, scanButton) = createRefs()
+            Column(
+                modifier = Modifier.constrainAs(logo) {
+                    start.linkTo(parent.start)
+                    centerVerticallyTo(parent)
+                }
+            ) {
+                Row {
+                    Text(
+                        text = "Headwind",
+                        fontSize = 12.sp,
+                        lineHeight = 13.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+                Row {
+                    Text(
+                        text = "Control",
+                        fontSize = 12.sp,
+                        lineHeight = 13.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+            if (appUiState.isBtAdapterEnabled) {
+                DeviceConnected(
+                    appUiState,
+                    modifier = Modifier.constrainAs(deviceConnected) {
+                        centerTo(parent)
+                    })
+            } else {
+                Text(
+                    text = stringResource(R.string.bluetooth_disabled),
+                    fontSize = 18.sp,
+                    color = Color.Red,
+                    modifier = Modifier.constrainAs(deviceConnected) {
+                        centerTo(parent)
+                    }
+                )
+            }
+            WindowButton(
+                Modifier.constrainAs(scanButton) {
+                    end.linkTo(parent.end)
+                },
+            ) { enterPiP() }
+        }
+    }
+}
+@Composable
+fun NotificationSearchPanel(appViewModel: AppViewModel, appUiState: AppUiState) {
+    Row(
+        horizontalArrangement = Arrangement.SpaceBetween,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 20.dp, bottom = 20.dp)
+            .border(
+                width = 1.dp,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
+                shape = RoundedCornerShape(16.dp)
+            )
+            .background(
+                color = Color.White,
+                shape = RoundedCornerShape(16.dp)
+            )
+            .padding(10.dp)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            NotificationSwitch(appUiState.isNotificationEnabled == true) { enabled ->
+                appViewModel.toggleNotificationEnabled(enabled)
+            }
+            Text(
+                modifier = Modifier.padding(start = 5.dp),
+                text = stringResource(R.string.notifications),
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 14.sp,
+                color = MaterialTheme.colorScheme.secondary
+            )
+        }
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            SearchButton(appUiState) { appViewModel.scanBleDevices() }
+            Text(
+                modifier = Modifier.padding(start = 5.dp, end = 10.dp),
+                text = stringResource(R.string.ble_search),
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 14.sp,
+                color = MaterialTheme.colorScheme.secondary
+            )
+        }
     }
 }
 
@@ -339,9 +349,10 @@ fun SpeedSlider(
     callback: (Int) -> Unit
 ) {
     var sliderPosition by remember { mutableFloatStateOf( s.currentFanSpeed.toFloat()) }
-    var fanSpeed by remember { mutableStateOf(s.currentFanSpeed)}
+    var fanSpeed by remember { mutableIntStateOf(s.currentFanSpeed) }
     if (fanSpeed != s.currentFanSpeed) {
         sliderPosition = s.currentFanSpeed.toFloat()
+        @Suppress("AssignedValueIsNeverRead")
         fanSpeed = s.currentFanSpeed
     }
     Column(
@@ -415,13 +426,13 @@ fun WindowButton(
     callback: () -> Unit
 ) {
     IconButton(
-        modifier = modifier
-            .size(48.dp),
+        modifier = modifier.size(48.dp),
         onClick = { callback() }
     ) {
         Icon(
             painterResource(R.drawable.close_fullscreen_24px),
             "To window mode",
+            tint = Color.DarkGray
         )
     }
 }
@@ -589,6 +600,4 @@ fun PipWindow(appUiState: AppUiState) {
     }
 }
 
-fun isButtonEnabled(s: AppUiState): Boolean {
-    return !s.waitForCharWrite && s.connectionStatus == ConnectionStatus.ACTIVE && s.connectedDeviceName != ""
-}
+fun isButtonEnabled(s: AppUiState) = !s.waitForCharWrite && s.connectionStatus == ConnectionStatus.ACTIVE && s.connectedDeviceName != ""
