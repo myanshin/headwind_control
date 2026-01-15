@@ -14,8 +14,9 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
@@ -55,8 +56,9 @@ class MainActivity : ComponentActivity() {
             HeadwindControlTheme {
                 Surface(
                     modifier = Modifier
+                        .background(MaterialTheme.colorScheme.surface)
                         .fillMaxSize()
-                        .safeDrawingPadding()
+                        .statusBarsPadding()
                         .onGloballyPositioned { layoutCoordinates ->
                             val sourceRect =
                                 layoutCoordinates.boundsInWindow().toAndroidRectF().toRect()
@@ -64,7 +66,6 @@ class MainActivity : ComponentActivity() {
                                 Rect(0, 0, sourceRect.width(), sourceRect.width() * 9 / 16)
                             pipParams = updatePictureInPictureParams(aspectRect)
                         },
-                    color = MaterialTheme.colorScheme.background
                 ) {
                     if (!isPipModeEnabled)
                         CheckBluetoothPermissions(this) { MainScreen(appViewModel, false) { enterPip() } }
@@ -76,10 +77,9 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        super.onCreate(savedInstanceState)
         setContent()
-
         appViewModel = ViewModelProvider(this, AppViewModel.Factory)[AppViewModel::class.java]
         ServiceLocator.appViewModel = appViewModel
         collectUiState(appViewModel)

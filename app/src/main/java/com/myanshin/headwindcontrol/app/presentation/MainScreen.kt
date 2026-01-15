@@ -20,6 +20,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+//noinspection UsingMaterialAndMaterial3Libraries
+import androidx.compose.material.Slider
+//noinspection UsingMaterialAndMaterial3Libraries
+import androidx.compose.material.SliderDefaults
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
@@ -29,10 +33,6 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-//noinspection UsingMaterialAndMaterial3Libraries
-import androidx.compose.material.Slider
-//noinspection UsingMaterialAndMaterial3Libraries
-import androidx.compose.material.SliderDefaults
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -55,9 +55,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
+import com.myanshin.headwindcontrol.R
 import com.myanshin.headwindcontrol.app.ConnectionStatus
 import com.myanshin.headwindcontrol.app.FanMode
-import com.myanshin.headwindcontrol.R
 import kotlin.math.roundToInt
 
 
@@ -233,7 +233,7 @@ fun NotificationSearchPanel(appViewModel: AppViewModel, appUiState: AppUiState) 
                 shape = RoundedCornerShape(16.dp)
             )
             .background(
-                color = Color.White,
+                color = MaterialTheme.colorScheme.onPrimary,
                 shape = RoundedCornerShape(16.dp)
             )
             .padding(10.dp)
@@ -362,7 +362,7 @@ fun SpeedSlider(
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
                 shape = RoundedCornerShape(16.dp))
             .background(
-                color = Color.White,
+                color = MaterialTheme.colorScheme.onPrimary,
                 shape = RoundedCornerShape(16.dp))
             .padding(10.dp)
 
@@ -459,7 +459,7 @@ fun IndeterminateCircularIndicator(
             .size(150.dp)
             .padding(start = 0.dp)
             .clip(CircleShape)
-            .background(Color.White),
+            .background(MaterialTheme.colorScheme.onPrimary),
         contentAlignment = Alignment.Center
 
     ) {
